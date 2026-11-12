@@ -1,0 +1,135 @@
+{
+  "schema_version": "0.1.0",
+  "analysis_id": "4c36b453-0344-4533-b80b-901f44831941",
+  "created_at": "2026-11-12T08:00:00Z",
+  "result_revision": 1,
+  "publication_status": "published",
+  "source": {
+    "dataset_id": "ds-demo-001",
+    "format": "csv",
+    "synthetic_example": true,
+    "event_count": 9,
+    "case_count": 3,
+    "fingerprint_sha256": "92b280ebdbf8b3f4eef5f378e480e65fbaa9e0a9b6de7fc6a9b7b383c584a5aa",
+    "mapping_version": "mapping-v1",
+    "window_start": "2026-10-01T08:00:00Z",
+    "window_end": "2026-10-01T09:18:00Z",
+    "time_zone": "UTC",
+    "timestamp_semantics": "completion_only"
+  },
+  "time_capabilities": {
+    "observed_inter_event_gap": {
+      "available": true,
+      "method": "successive completion timestamps within each case",
+      "reason": "All cases have ordered completion timestamps."
+    },
+    "processing_time": {
+      "available": false,
+      "reason": "No activity start timestamps."
+    },
+    "queue_wait_time": {
+      "available": false,
+      "reason": "No queue arrival and service start timestamps."
+    },
+    "queue_length": {
+      "available": false,
+      "reason": "No queue entry/exit events or explicit queue occupancy observations."
+    }
+  },
+  "process_model": {
+    "type": "dfg",
+    "nodes": [
+      "CNC milling",
+      "Welding",
+      "Quality control"
+    ],
+    "edges": [
+      {
+        "from": "CNC milling",
+        "to": "Welding",
+        "count": 3,
+        "observed_inter_event_gap_seconds": {
+          "n": 3,
+          "mean": 3220,
+          "p50": 3060,
+          "p90": 3492
+        }
+      },
+      {
+        "from": "Welding",
+        "to": "Quality control",
+        "count": 3,
+        "observed_inter_event_gap_seconds": {
+          "n": 3,
+          "mean": 360,
+          "p50": 360,
+          "p90": 408
+        }
+      }
+    ]
+  },
+  "metrics": {
+    "observed_case_span_seconds": {
+      "n": 3,
+      "mean": 3580,
+      "p50": 3480,
+      "p90": 3816
+    },
+    "rework_events": 0
+  },
+  "findings": [
+    {
+      "finding_id": "f-001",
+      "rank": 1,
+      "finding_type": "delay_hotspot",
+      "severity": "unrated",
+      "target": {
+        "kind": "transition",
+        "from_activity": "CNC milling",
+        "to_activity": "Welding"
+      },
+      "evidence": {
+        "metric_name": "observed_inter_event_gap_seconds",
+        "value": 3220,
+        "unit": "seconds",
+        "sample_size": 3,
+        "aggregation": "mean",
+        "method": "per-case consecutive completion time difference; rank by mean",
+        "reference_value": 360,
+        "threshold_rule": "relative ranking only; no calibrated severity threshold"
+      },
+      "expert_assessment": "needs_investigation",
+      "limitations": [
+        "Observed gap includes possible processing and transfer time of the next activity.",
+        "No direct queue evidence or capacity-utilization data.",
+        "Only three synthetic cases; not a validated bottleneck."
+      ]
+    }
+  ],
+  "ai_interpretations": [],
+  "scenarios": [],
+  "provenance": {
+    "pipeline_version": "example-v0.1",
+    "pm4py_version": "example-unverified",
+    "detector_version": "draft-v0.1",
+    "ruleset_id": "mean-gap-ranking-demo",
+    "mapping_approved_at": "2026-11-12T07:55:00Z",
+    "correlation_id": "demo-trace-01"
+  },
+  "review": {
+    "reviewer_id": "demo-human",
+    "reviewed_at": "2026-11-12T08:10:00Z",
+    "scope": "publication_approval",
+    "comments": "Approved ONLY as synthetic contract example; no empirical finding is asserted."
+  },
+  "warnings": [
+    {
+      "code": "TEMPORAL_SEMANTICS_LIMITED",
+      "message": "The data support inter-event gaps, not directly observed queue waits."
+    },
+    {
+      "code": "SYNTHETIC_EXAMPLE",
+      "message": "Numbers illustrate the contract and have no experimental validity."
+    }
+  ]
+}

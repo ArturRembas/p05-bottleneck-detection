@@ -1,0 +1,701 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://p05.example.invalid/schemas/analysis-result/v0.1.0",
+  "title": "P05 Analysis Result v0.1.0",
+  "description": "Proposed exchange contract. Evidence-based findings are distinct from AI hypotheses and simulation estimates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "analysis_id",
+    "created_at",
+    "result_revision",
+    "publication_status",
+    "source",
+    "time_capabilities",
+    "process_model",
+    "metrics",
+    "findings",
+    "ai_interpretations",
+    "scenarios",
+    "provenance",
+    "warnings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "analysis_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "result_revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "publication_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "rejected"
+      ]
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "time_capabilities": {
+      "$ref": "#/$defs/TimeCapabilities"
+    },
+    "process_model": {
+      "$ref": "#/$defs/ProcessModel"
+    },
+    "metrics": {
+      "$ref": "#/$defs/Metrics"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Finding"
+      }
+    },
+    "ai_interpretations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/AIInterpretation"
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ScenarioEstimate"
+      }
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "review": {
+      "$ref": "#/$defs/HumanReview"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Warning"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "publication_status": {
+            "const": "published"
+          }
+        },
+        "required": [
+          "publication_status"
+        ]
+      },
+      "then": {
+        "required": [
+          "review"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "Stat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "n",
+        "mean",
+        "p50",
+        "p90"
+      ],
+      "properties": {
+        "n": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mean": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p50": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p90": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "Source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dataset_id",
+        "format",
+        "synthetic_example",
+        "event_count",
+        "case_count",
+        "fingerprint_sha256",
+        "mapping_version",
+        "time_zone",
+        "timestamp_semantics"
+      ],
+      "properties": {
+        "dataset_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "format": {
+          "enum": [
+            "csv",
+            "xes",
+            "ocel"
+          ]
+        },
+        "synthetic_example": {
+          "type": "boolean"
+        },
+        "event_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "case_count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Count is meaningful only after a case notion/object type has been selected."
+        },
+        "object_type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Required by semantic policy for an OCEL projection."
+        },
+        "fingerprint_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "window_start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "window_end": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "mapping_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "time_zone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp_semantics": {
+          "enum": [
+            "completion_only",
+            "start_and_completion",
+            "queue_arrival_and_service_start",
+            "mixed_with_metadata"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "format": {
+                "const": "ocel"
+              }
+            },
+            "required": [
+              "format"
+            ]
+          },
+          "then": {
+            "required": [
+              "object_type"
+            ]
+          }
+        }
+      ]
+    },
+    "Capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "reason"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "method": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "TimeCapabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observed_inter_event_gap",
+        "processing_time",
+        "queue_wait_time",
+        "queue_length"
+      ],
+      "properties": {
+        "observed_inter_event_gap": {
+          "$ref": "#/$defs/Capability"
+        },
+        "processing_time": {
+          "$ref": "#/$defs/Capability"
+        },
+        "queue_wait_time": {
+          "$ref": "#/$defs/Capability"
+        },
+        "queue_length": {
+          "$ref": "#/$defs/Capability"
+        }
+      }
+    },
+    "Edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "count"
+      ],
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "observed_inter_event_gap_seconds": {
+          "$ref": "#/$defs/Stat"
+        },
+        "queue_wait_time_seconds": {
+          "$ref": "#/$defs/Stat"
+        }
+      }
+    },
+    "ProcessModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "nodes",
+        "edges"
+      ],
+      "properties": {
+        "type": {
+          "const": "dfg"
+        },
+        "nodes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Edge"
+          }
+        }
+      }
+    },
+    "Metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rework_events"
+      ],
+      "properties": {
+        "observed_case_span_seconds": {
+          "$ref": "#/$defs/Stat"
+        },
+        "rework_events": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "transition",
+            "activity",
+            "resource"
+          ]
+        },
+        "activity": {
+          "type": "string"
+        },
+        "from_activity": {
+          "type": "string"
+        },
+        "to_activity": {
+          "type": "string"
+        },
+        "resource_id": {
+          "type": "string"
+        }
+      }
+    },
+    "Evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric_name",
+        "value",
+        "unit",
+        "sample_size",
+        "aggregation",
+        "method"
+      ],
+      "properties": {
+        "metric_name": {
+          "enum": [
+            "observed_inter_event_gap_seconds",
+            "processing_time_seconds",
+            "queue_wait_time_seconds",
+            "queue_length_units",
+            "rework_ratio"
+          ]
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "enum": [
+            "seconds",
+            "units",
+            "ratio"
+          ]
+        },
+        "sample_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "aggregation": {
+          "enum": [
+            "mean",
+            "median",
+            "p90",
+            "max",
+            "count",
+            "ratio"
+          ]
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference_value": {
+          "type": "number",
+          "minimum": 0
+        },
+        "threshold_rule": {
+          "type": "string"
+        }
+      }
+    },
+    "Finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finding_id",
+        "rank",
+        "finding_type",
+        "severity",
+        "target",
+        "evidence",
+        "expert_assessment",
+        "limitations"
+      ],
+      "properties": {
+        "finding_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "finding_type": {
+          "enum": [
+            "delay_hotspot",
+            "queue_congestion_candidate",
+            "capacity_bottleneck_candidate",
+            "rework_hotspot"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "unrated",
+            "low",
+            "moderate",
+            "high",
+            "critical"
+          ]
+        },
+        "target": {
+          "$ref": "#/$defs/Target"
+        },
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "expert_assessment": {
+          "enum": [
+            "not_reviewed",
+            "confirmed",
+            "rejected",
+            "needs_investigation"
+          ]
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "DocumentCitation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document_id",
+        "document_version",
+        "passage_id"
+      ],
+      "properties": {
+        "document_id": {
+          "type": "string"
+        },
+        "document_version": {
+          "type": "string"
+        },
+        "passage_id": {
+          "type": "string"
+        }
+      }
+    },
+    "AIInterpretation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interpretation_id",
+        "kind",
+        "text",
+        "finding_ids",
+        "document_citations",
+        "model_id",
+        "prompt_version",
+        "human_validation"
+      ],
+      "properties": {
+        "interpretation_id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "explanation",
+            "hypothesis",
+            "countermeasure",
+            "documentation_answer"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "finding_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "document_citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocumentCitation"
+          }
+        },
+        "model_id": {
+          "type": "string"
+        },
+        "prompt_version": {
+          "type": "string"
+        },
+        "human_validation": {
+          "enum": [
+            "not_reviewed",
+            "accepted",
+            "rejected"
+          ]
+        }
+      }
+    },
+    "ScenarioEstimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario_id",
+        "status",
+        "assumptions"
+      ],
+      "properties": {
+        "scenario_id": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "proposed",
+            "simulated"
+          ]
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "simulator": {
+          "enum": [
+            "simpy"
+          ]
+        },
+        "replications": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "random_seed": {
+          "type": "integer"
+        },
+        "estimated_metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Output is a conditional simulation estimate, never an observed measurement."
+        }
+      }
+    },
+    "Provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pipeline_version",
+        "pm4py_version",
+        "detector_version",
+        "ruleset_id",
+        "mapping_approved_at"
+      ],
+      "properties": {
+        "pipeline_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pm4py_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "detector_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ruleset_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mapping_approved_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ai_runtime_version": {
+          "type": "string"
+        },
+        "correlation_id": {
+          "type": "string"
+        }
+      }
+    },
+    "HumanReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewer_id",
+        "reviewed_at",
+        "scope"
+      ],
+      "properties": {
+        "reviewer_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "scope": {
+          "enum": [
+            "publication_approval",
+            "expert_finding_validation"
+          ]
+        },
+        "comments": {
+          "type": "string"
+        }
+      }
+    },
+    "Warning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z_]+$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
