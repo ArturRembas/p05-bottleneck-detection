@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="imdf_net_1793144124.6001632" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text>imdf_net_1793144124.6001632</text>
+    </name>
+    <page id="n0">
+      <place id="p_5">
+        <name>
+          <text>p_5</text>
+        </name>
+      </place>
+      <place id="p_8">
+        <name>
+          <text>p_8</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="p_6">
+        <name>
+          <text>p_6</text>
+        </name>
+      </place>
+      <place id="p_7">
+        <name>
+          <text>p_7</text>
+        </name>
+      </place>
+      <transition id="e7249305-c37a-429e-8c9b-b6f43389e49e">
+        <name>
+          <text>Ordine</text>
+        </name>
+      </transition>
+      <transition id="ec0c507d-4e5f-43f2-942a-0b3b1e6ad413">
+        <name>
+          <text>Controllo materiali</text>
+        </name>
+      </transition>
+      <transition id="4fc6cb9c-101c-41a2-84d6-8c830d5ed855">
+        <name>
+          <text>Setup macchina</text>
+        </name>
+      </transition>
+      <transition id="d22cfbc2-cb15-45ea-b310-9257cecb9cf5">
+        <name>
+          <text>Assemblaggio</text>
+        </name>
+      </transition>
+      <arc id="124531321486176" source="source" target="e7249305-c37a-429e-8c9b-b6f43389e49e"/>
+      <arc id="124531320199552" source="e7249305-c37a-429e-8c9b-b6f43389e49e" target="p_5"/>
+      <arc id="124531319871136" source="4fc6cb9c-101c-41a2-84d6-8c830d5ed855" target="p_6"/>
+      <arc id="124531320068992" source="p_7" target="ec0c507d-4e5f-43f2-942a-0b3b1e6ad413"/>
+      <arc id="124531320344256" source="p_8" target="d22cfbc2-cb15-45ea-b310-9257cecb9cf5"/>
+      <arc id="124531319870864" source="p_5" target="4fc6cb9c-101c-41a2-84d6-8c830d5ed855"/>
+      <arc id="124531321725840" source="e7249305-c37a-429e-8c9b-b6f43389e49e" target="p_7"/>
+      <arc id="124531320068752" source="ec0c507d-4e5f-43f2-942a-0b3b1e6ad413" target="p_8"/>
+      <arc id="124531321722576" source="p_6" target="d22cfbc2-cb15-45ea-b310-9257cecb9cf5"/>
+      <arc id="124531320430320" source="d22cfbc2-cb15-45ea-b310-9257cecb9cf5" target="sink"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>

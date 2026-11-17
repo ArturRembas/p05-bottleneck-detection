@@ -1,0 +1,13 @@
+{
+  "experiment": "EXP-04",
+  "dataset": "synthetic_parallel.csv",
+  "cases": 8,
+  "events": 32,
+  "pm4py_version": "2.7.23.11",
+  "dfg_A_to_B": 4,
+  "dfg_B_to_A": 4,
+  "process_tree": "->( 'Ordine', +( 'Setup macchina', 'Controllo materiali' ), 'Assemblaggio' )",
+  "parallel_operator_detected": true,
+  "control_parallel_detected": false,
+  "svg_status": "created"
+}

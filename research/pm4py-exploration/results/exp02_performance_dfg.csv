@@ -1,0 +1,5 @@
+source,target,occurrences,pm4py_mean_seconds,pm4py_mean_minutes,manual_mean_seconds,min_seconds,max_seconds
+Fresatura,Fresatura,1,2520.0,42.0,2520.0,2520.0,2520.0
+Fresatura,Saldatura,4,2130.0,35.5,2130.0,1800.0,2400.0
+Saldatura,Controllo,4,1275.0,21.25,1275.0,1200.0,1500.0
+Taglio,Fresatura,4,1065.0,17.75,1065.0,900.0,1200.0

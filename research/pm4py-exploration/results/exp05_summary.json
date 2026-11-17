@@ -1,0 +1,28 @@
+{
+  "experiment": "EXP-05",
+  "pm4py_version": "2.7.23.11",
+  "arrival_interval_min": 7,
+  "service_duration_min": 12,
+  "scenarios": [
+    {
+      "capacity": 1,
+      "cases": 8,
+      "mean_wait_min": 17.5,
+      "max_wait_min": 35.0,
+      "mean_service_min": 12.0,
+      "makespan_min": 96.0,
+      "observed_throughput_per_hour": 5.0,
+      "tests": "passed"
+    },
+    {
+      "capacity": 2,
+      "cases": 8,
+      "mean_wait_min": 0.0,
+      "max_wait_min": 0.0,
+      "mean_service_min": 12.0,
+      "makespan_min": 61.0,
+      "observed_throughput_per_hour": 7.868852459016394,
+      "tests": "passed"
+    }
+  ]
+}
