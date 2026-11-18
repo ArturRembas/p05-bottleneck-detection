@@ -1,0 +1,4 @@
+# Draft test dependencies only — create dev.lock after validation.
+pytest
+pytest-cov
+httpx
