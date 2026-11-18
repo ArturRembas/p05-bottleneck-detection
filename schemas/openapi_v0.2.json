@@ -2,17 +2,97 @@
   "openapi": "3.1.0",
   "info": {
     "title": "P05 \u2014 Bottleneck Detection in Processes API",
-    "description": "Componente del framework AI Puzzle. Espone contratti OpenAPI 3.1 per l'analisi di colli di bottiglia, vincoli di capacit\u00e0 e KPI di processo.",
+    "description": "Component of the AI Puzzle Framework. Exposes OpenAPI 3.1 compliant endpoints for process bottleneck detection, capacity constraints, and operational KPIs.",
     "version": "0.2.0"
   },
   "paths": {
+    "/api/v1/analyses": {
+      "post": {
+        "tags": [
+          "Analysis Ingestion & Processing"
+        ],
+        "summary": "Create Analysis",
+        "description": "Ingests an event log, performs deterministic process discovery via pm4py,\n\nand returns a fully structured AnalysisResultPayload matching SRS v0.2 \u00a7\n7.1.",
+        "operationId": "create_analysis_api_v1_analyses_post",
+        "parameters": [
+          {
+            "name": "case_id_col",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Column name for Case Identifier",
+              "default": "Case_ID",
+              "title": "Case Id Col"
+            },
+            "description": "Column name for Case Identifier"
+          },
+          {
+            "name": "activity_col",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Column name for Activity label",
+              "default": "Activity",
+              "title": "Activity Col"
+            },
+            "description": "Column name for Activity label"
+          },
+          {
+            "name": "timestamp_col",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Column name for Event Timestamp",
+              "default": "Timestamp",
+              "title": "Timestamp Col"
+            },
+            "description": "Column name for Event Timestamp"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_analysis_api_v1_analyses_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResultPayload"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/analyses/{analysis_id}/bottlenecks": {
       "get": {
         "tags": [
           "Interoperability P06 / P20"
         ],
         "summary": "Get Bottlenecks",
-        "description": "Fornisce l'elenco ordinato delle stazioni critiche e dei colli di\n\nbottiglia candidati ai moduli a valle: P06 (Schedulazione) e P20 (Risorse).",
+        "description": "Returns ranked candidate bottlenecks and capacity constraints for\n\ndownstream consumers: P06 (Production Scheduling) and P20 (Resource\nAllocation).",
         "operationId": "get_bottlenecks_api_v1_analyses__analysis_id__bottlenecks_get",
         "parameters": [
           {
@@ -59,7 +139,7 @@
           "Interoperability P17"
         ],
         "summary": "Get Process Kpis",
-        "description": "Esporta i KPI globali di processo (tempo di throughput, intervalli di\n\ntransizione) a beneficio del modulo P17 (Data Analytics).",
+        "description": "Supplies aggregated process efficiency metrics and lead times to P17\n\n(Data Analytics).",
         "operationId": "get_process_kpis_api_v1_analyses__analysis_id__kpis_get",
         "parameters": [
           {
@@ -106,7 +186,7 @@
           "Full Analysis Result"
         ],
         "summary": "Get Full Analysis",
-        "description": "Restituisce il payload strutturato completo dell'analisi conforme alla\n\nSezione 7.1 della SRS v0.2.",
+        "description": "Retrieves the complete, validated structured analysis report adhering to\n\nSRS v0.2 \u00a7 7.1.",
         "operationId": "get_full_analysis_api_v1_analyses__analysis_id__full_report_get",
         "parameters": [
           {
@@ -143,55 +223,43 @@
         }
       }
     },
-    "/api/v1/countermeasures/approve": {
+    "/api/v1/analyses/{analysis_id}/countermeasures/approve": {
       "post": {
         "tags": [
           "Human-in-the-Loop Governance (D24/UC11)"
         ],
         "summary": "Approve Countermeasure",
-        "description": "Registra la convalida esplicita dell'analista umano (HITL Gate).\n\nNessuna raccomandazione operativa viene notificata a P06/P20 senza questa\napprovazione.",
-        "operationId": "approve_countermeasure_api_v1_countermeasures_approve_post",
+        "description": "Enforces the mandatory Human-in-the-Loop governance gate.\n\nRecords explicit human supervisor authorization before countermeasures are\ndispatched to downstream scheduling modules.",
+        "operationId": "approve_countermeasure_api_v1_analyses__analysis_id__countermeasures_approve_post",
         "parameters": [
           {
             "name": "analysis_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "ID dell'analisi",
               "title": "Analysis Id"
-            },
-            "description": "ID dell'analisi"
-          },
-          {
-            "name": "workstation",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Stazione approvata",
-              "title": "Workstation"
-            },
-            "description": "Stazione approvata"
-          },
-          {
-            "name": "action",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Azione convalidata",
-              "title": "Action"
-            },
-            "description": "Azione convalidata"
+            }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalResponse"
+                }
               }
             }
           },
@@ -214,7 +282,7 @@
           "Export & Interoperability P21"
         ],
         "summary": "Export Bpmn",
-        "description": "Esporta il modello formale di processo scoperto in formato standard BPMN\n\n2.0 XML per P21 (What-If).",
+        "description": "Exports discovered process topology as a standard BPMN 2.0 XML model for\n\nP21 (What-If Simulator).",
         "operationId": "export_bpmn_api_v1_analyses__analysis_id__export_bpmn_get",
         "parameters": [
           {
@@ -257,13 +325,13 @@
           "type": {
             "type": "string",
             "title": "Type",
-            "description": "Tipo di asserzione: hypothesis, explanatory, limitation",
+            "description": "Assertion type: hypothesis, explanatory, or limitation",
             "default": "hypothesis"
           },
           "text": {
             "type": "string",
             "title": "Text",
-            "description": "Spiegazione contestuale o contromisura proposta"
+            "description": "Contextual reasoning diagnosis or proposed countermeasure"
           },
           "evidence_refs": {
             "items": {
@@ -271,7 +339,7 @@
             },
             "type": "array",
             "title": "Evidence Refs",
-            "description": "Riferimenti a metriche deterministiche certe"
+            "description": "Traceable references to deterministic calculation records"
           }
         },
         "type": "object",
@@ -290,7 +358,7 @@
           "analysis_id": {
             "type": "string",
             "title": "Analysis Id",
-            "description": "Identificativo univoco della sessione di analisi"
+            "description": "Unique session identifier for this analysis"
           },
           "timestamp": {
             "type": "string",
@@ -301,7 +369,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Source",
-            "description": "Metadati del log (versione, hash sorgente, semantica temporale)"
+            "description": "Input metadata: log version, input hash, and time semantics"
           },
           "capabilities": {
             "additionalProperties": {
@@ -309,7 +377,7 @@
             },
             "type": "object",
             "title": "Capabilities",
-            "description": "Capability consentite dal log (process_discovery, service_duration, queue_length)"
+            "description": "Admissible capabilities based on ingested schema attributes"
           },
           "kpis": {
             "items": {
@@ -317,7 +385,7 @@
             },
             "type": "array",
             "title": "Kpis",
-            "description": "Lista dei KPI misurati o derivati"
+            "description": "List of measured, derived, or unavailable KPIs"
           },
           "candidate_bottlenecks": {
             "items": {
@@ -325,7 +393,7 @@
             },
             "type": "array",
             "title": "Candidate Bottlenecks",
-            "description": "Candidati colli di bottiglia identificati dal core deterministico"
+            "description": "Ranked candidate bottlenecks identified by analytical core"
           },
           "ai_interpretations": {
             "items": {
@@ -333,7 +401,7 @@
             },
             "type": "array",
             "title": "Ai Interpretations",
-            "description": "Ipotesi dell'AI e contromisure suggerite"
+            "description": "Cognitive reasoning hypotheses and recommended interventions"
           },
           "simulated_scenarios": {
             "items": {
@@ -342,7 +410,7 @@
             },
             "type": "array",
             "title": "Simulated Scenarios",
-            "description": "Esiti di eventuali simulazioni what-if SimPy"
+            "description": "Simulation scenario outcomes and counterfactual estimates"
           },
           "limitations": {
             "items": {
@@ -350,7 +418,7 @@
             },
             "type": "array",
             "title": "Limitations",
-            "description": "Disclaimer e vincoli sui dati non inferibili"
+            "description": "Explicit disclaimers regarding unmeasurable phenomena"
           }
         },
         "type": "object",
@@ -360,6 +428,98 @@
           "capabilities"
         ],
         "title": "AnalysisResultPayload"
+      },
+      "ApprovalRequest": {
+        "properties": {
+          "workstation": {
+            "type": "string",
+            "title": "Workstation",
+            "description": "Workstation target of the countermeasure"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "Operational action approved by the supervisor"
+          },
+          "supervisor_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Notes",
+            "description": "Optional notes logged during review"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workstation",
+          "action"
+        ],
+        "title": "ApprovalRequest"
+      },
+      "ApprovalResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Execution status of the approval gate"
+          },
+          "analysis_id": {
+            "type": "string",
+            "title": "Analysis Id",
+            "description": "Unique identifier of the validated analysis run"
+          },
+          "workstation": {
+            "type": "string",
+            "title": "Workstation",
+            "description": "Target workstation approved for intervention"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "Approved countermeasure action"
+          },
+          "approval_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Approval Timestamp"
+          },
+          "notified_partners": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notified Partners",
+            "description": "External modules informed via interoperability layer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "analysis_id",
+          "workstation",
+          "action"
+        ],
+        "title": "ApprovalResponse"
+      },
+      "Body_create_analysis_api_v1_analyses_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "Event log file in CSV or XES format"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_create_analysis_api_v1_analyses_post"
       },
       "BottleneckSeverity": {
         "type": "string",
@@ -376,27 +536,27 @@
           "activity": {
             "type": "string",
             "title": "Activity",
-            "description": "Nome della stazione o fase di processo"
+            "description": "Name of the process workstation or activity"
           },
           "rank": {
             "type": "integer",
             "title": "Rank",
-            "description": "Posizione nella graduatoria di congestione (1 = peggiore)"
+            "description": "Congestion ranking index (1 indicates highest impact)"
           },
           "method": {
             "type": "string",
             "title": "Method",
-            "description": "Metodo algoritmico applicato",
+            "description": "Underlying algorithmic discovery method",
             "default": "statistical_inter_event_gap"
           },
           "severity": {
             "$ref": "#/components/schemas/BottleneckSeverity",
-            "description": "Livello di criticit\u00e0 stimato"
+            "description": "Estimated severity level"
           },
           "waiting_time_hours": {
             "type": "number",
             "title": "Waiting Time Hours",
-            "description": "Tempo medio di intervallo/attesa in ore"
+            "description": "Observed mean transition or queue interval in hours"
           },
           "evidence_refs": {
             "items": {
@@ -404,11 +564,11 @@
             },
             "type": "array",
             "title": "Evidence Refs",
-            "description": "Riferimenti tracciabili agli ID KPI o run"
+            "description": "Traceable references to KPI identifiers or run logs"
           },
           "validation": {
             "$ref": "#/components/schemas/ValidationStatus",
-            "description": "Stato del gate di Human Oversight",
+            "description": "Human oversight governance status",
             "default": "pending"
           }
         },
@@ -449,26 +609,26 @@
           "metric": {
             "type": "string",
             "title": "Metric",
-            "description": "Identificativo metrica (es. observed_transition_gap, throughput_time)"
+            "description": "Metric identifier (e.g., observed_transition_gap, throughput_time)"
           },
           "value": {
             "type": "number",
             "title": "Value",
-            "description": "Valore numerico calcolato"
+            "description": "Calculated numerical value"
           },
           "unit": {
             "type": "string",
             "title": "Unit",
-            "description": "Unit\u00e0 di misura (min, hours, ratio)"
+            "description": "Unit of measurement (min, hours, ratio)"
           },
           "status": {
             "$ref": "#/components/schemas/MetricStatus",
-            "description": "Stato di affidabilit\u00e0 del dato secondo i campi disponibili"
+            "description": "Data reliability status reflecting available log attributes"
           },
           "sample_size": {
             "type": "integer",
             "title": "Sample Size",
-            "description": "Numero di casi/eventi su cui \u00e8 calcolata"
+            "description": "Number of observed cases or events in sample"
           }
         },
         "type": "object",
