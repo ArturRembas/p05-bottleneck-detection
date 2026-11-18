@@ -38,6 +38,7 @@ services:
     environment:
       P05_RESEARCH_SOURCE: /research-source
       P05_RESEARCH_RUNS: /runs
+      MPLCONFIGDIR: /tmp/matplotlib
     volumes:
       - ${P05_RESEARCH_SOURCE:-./.local/research-source}:/research-source:ro
       - ${P05_RESEARCH_RUNS:-./.local/research-runs}:/runs
