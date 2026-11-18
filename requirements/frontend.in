@@ -1,0 +1,3 @@
+# Draft direct dependencies only — create frontend.lock after validation.
+streamlit
+httpx

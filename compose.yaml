@@ -1,0 +1,48 @@
+name: p05
+services:
+  backend:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      target: runtime
+    environment:
+      P05_DATA_DIR: /var/p05/data
+      P05_RESULTS_DIR: /var/p05/results
+    volumes:
+      - ${P05_PRIVATE_DATA_DIR:-./.local/private-data}:/var/p05/data:ro
+      - ${P05_RESULTS_DIR:-./.local/results}:/var/p05/results
+    ports:
+      - "127.0.0.1:${P05_BACKEND_PORT:-8000}:8000"
+    # Intentionally NO command/entrypoint for FastAPI until api.main:app exists.
+    # Do not run this profile as an application before that integration PR.
+
+  frontend:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      target: runtime
+    environment:
+      P05_API_URL: http://backend:8000
+    depends_on: [backend]
+    ports:
+      - "127.0.0.1:${P05_FRONTEND_PORT:-8501}:8501"
+    # Intentionally NO Streamlit entrypoint until ui/app.py exists.
+
+  research:
+    profiles: [research]
+    build:
+      context: .
+      dockerfile: docker/research.Dockerfile
+    environment:
+      P05_RESEARCH_SOURCE: /research-source
+      P05_RESEARCH_RUNS: /runs
+    volumes:
+      - ${P05_RESEARCH_SOURCE:-./.local/research-source}:/research-source:ro
+      - ${P05_RESEARCH_RUNS:-./.local/research-runs}:/runs
+    read_only: true
+    tmpfs:
+      - /tmp:rw,exec,nosuid,size=512m
+    network_mode: none
+    entrypoint: ["bash", "/opt/p05/run-research.sh"]

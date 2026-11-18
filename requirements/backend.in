@@ -1,0 +1,9 @@
+# Draft direct dependencies only — resolve, verify Python compatibility, and create backend.lock before enabling backend.
+fastapi
+uvicorn
+pandas
+pm4py
+simpy
+python-multipart
+pydantic
+# LangGraph/LLM adapters are opt-in once AI requirements are validated.
