@@ -33,6 +33,7 @@ htmlcov/
 .env
 .env.*
 !.env.example
+!.env.docker.example
 
 .streamlit/secrets.toml
 
@@ -44,6 +45,7 @@ data/raw/
 data/processed/
 data/results/
 data/private/
+.local/
 
 # Databases
 *.db

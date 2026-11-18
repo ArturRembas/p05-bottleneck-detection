@@ -1,0 +1,15 @@
+.git
+.venv
+__pycache__
+*.pyc
+.env
+.env.*
+!.env.docker.example
+.local
+.worktrees
+research/pm4py-exploration/data
+research/pm4py-exploration/results
+# Do not send real/raw data or run output as Docker build context.
+data/raw
+data/private
+data/results
