@@ -1,0 +1,164 @@
+{
+  "completo": {
+    "events": 8,
+    "columns": [
+      "case_id",
+      "activity",
+      "queue_entry",
+      "start_timestamp",
+      "timestamp",
+      "resource"
+    ],
+    "capabilities": {
+      "dfg": {
+        "structurally_possible": true,
+        "reasons": []
+      },
+      "event_intervals": {
+        "structurally_possible": true,
+        "reasons": []
+      },
+      "service_time": {
+        "structurally_possible": true,
+        "reasons": []
+      },
+      "waiting_time": {
+        "structurally_possible": true,
+        "reasons": []
+      }
+    },
+    "semantic_validation": "not_performed"
+  },
+  "minimo": {
+    "events": 17,
+    "columns": [
+      "case_id",
+      "activity",
+      "timestamp",
+      "resource"
+    ],
+    "capabilities": {
+      "dfg": {
+        "structurally_possible": true,
+        "reasons": []
+      },
+      "event_intervals": {
+        "structurally_possible": true,
+        "reasons": []
+      },
+      "service_time": {
+        "structurally_possible": false,
+        "reasons": [
+          "Colonne assenti: ['start_timestamp']"
+        ]
+      },
+      "waiting_time": {
+        "structurally_possible": false,
+        "reasons": [
+          "Colonne assenti: ['queue_entry', 'start_timestamp']"
+        ]
+      }
+    },
+    "semantic_validation": "not_performed"
+  },
+  "senza_ingresso_coda": {
+    "events": 8,
+    "columns": [
+      "case_id",
+      "activity",
+      "start_timestamp",
+      "timestamp",
+      "resource"
+    ],
+    "capabilities": {
+      "dfg": {
+        "structurally_possible": true,
+        "reasons": []
+      },
+      "event_intervals": {
+        "structurally_possible": true,
+        "reasons": []
+      },
+      "service_time": {
+        "structurally_possible": true,
+        "reasons": []
+      },
+      "waiting_time": {
+        "structurally_possible": false,
+        "reasons": [
+          "Colonne assenti: ['queue_entry']"
+        ]
+      }
+    },
+    "semantic_validation": "not_performed"
+  },
+  "senza_inizio": {
+    "events": 8,
+    "columns": [
+      "case_id",
+      "activity",
+      "queue_entry",
+      "timestamp",
+      "resource"
+    ],
+    "capabilities": {
+      "dfg": {
+        "structurally_possible": true,
+        "reasons": []
+      },
+      "event_intervals": {
+        "structurally_possible": true,
+        "reasons": []
+      },
+      "service_time": {
+        "structurally_possible": false,
+        "reasons": [
+          "Colonne assenti: ['start_timestamp']"
+        ]
+      },
+      "waiting_time": {
+        "structurally_possible": false,
+        "reasons": [
+          "Colonne assenti: ['start_timestamp']"
+        ]
+      }
+    },
+    "semantic_validation": "not_performed"
+  },
+  "timestamp_non_valido": {
+    "events": 8,
+    "columns": [
+      "case_id",
+      "activity",
+      "queue_entry",
+      "start_timestamp",
+      "timestamp",
+      "resource"
+    ],
+    "capabilities": {
+      "dfg": {
+        "structurally_possible": false,
+        "reasons": [
+          "Valori mancanti o non validi: ['timestamp']"
+        ]
+      },
+      "event_intervals": {
+        "structurally_possible": false,
+        "reasons": [
+          "Valori mancanti o non validi: ['timestamp']"
+        ]
+      },
+      "service_time": {
+        "structurally_possible": false,
+        "reasons": [
+          "Valori mancanti o non validi: ['timestamp']"
+        ]
+      },
+      "waiting_time": {
+        "structurally_possible": true,
+        "reasons": []
+      }
+    },
+    "semantic_validation": "not_performed"
+  }
+}

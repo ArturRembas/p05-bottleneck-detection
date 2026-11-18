@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ptml>
+  <processTree name="94f71152-5f82-45af-a40a-3edac6591002" root="0c69ed74-ad4e-4d17-bd5c-58ddfedf1830" id="ff18403e-7556-4d57-8d30-0e03f574f3fc">
+    <sequence name="" id="0c69ed74-ad4e-4d17-bd5c-58ddfedf1830"/>
+    <manualTask name="Ordine" id="264b7415-a741-41ca-b3eb-bb3125b90843"/>
+    <and name="" id="76dc06cb-41da-4868-ae40-664b2d1a596a"/>
+    <manualTask name="Assemblaggio" id="2a8d6cb4-71cd-4967-976f-1eabb35f60c3"/>
+    <manualTask name="Setup macchina" id="14630be9-3274-4f3a-b189-e54c0d385ecd"/>
+    <manualTask name="Controllo materiali" id="4a8d20da-5458-4ac3-aa49-bffb6f6f534b"/>
+    <parentsNode id="ef3d84b3-cb9b-4211-b403-9c2cf2e1b985" sourceId="0c69ed74-ad4e-4d17-bd5c-58ddfedf1830" targetId="264b7415-a741-41ca-b3eb-bb3125b90843"/>
+    <parentsNode id="df4db5f3-6eff-4918-b956-3cbfa7b01f4d" sourceId="0c69ed74-ad4e-4d17-bd5c-58ddfedf1830" targetId="76dc06cb-41da-4868-ae40-664b2d1a596a"/>
+    <parentsNode id="11d4c39d-3330-45bc-8cc6-c196e57a986b" sourceId="0c69ed74-ad4e-4d17-bd5c-58ddfedf1830" targetId="2a8d6cb4-71cd-4967-976f-1eabb35f60c3"/>
+    <parentsNode id="082aaf7f-9133-42ce-b191-74e708a454ce" sourceId="76dc06cb-41da-4868-ae40-664b2d1a596a" targetId="14630be9-3274-4f3a-b189-e54c0d385ecd"/>
+    <parentsNode id="72ee8292-f2eb-4d1d-af16-b6a8af07026a" sourceId="76dc06cb-41da-4868-ae40-664b2d1a596a" targetId="4a8d20da-5458-4ac3-aa49-bffb6f6f534b"/>
+  </processTree>
+</ptml>

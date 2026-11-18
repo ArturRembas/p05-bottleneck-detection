@@ -1,0 +1,5 @@
+source,target,frequency
+Fresatura,Fresatura,1
+Fresatura,Saldatura,4
+Saldatura,Controllo,4
+Taglio,Fresatura,4

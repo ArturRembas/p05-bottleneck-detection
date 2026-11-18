@@ -1,0 +1,42 @@
+{
+  "experiment": "EXP-09",
+  "results": {
+    "A_regolare": {
+      "activity": "Fresatura CNC",
+      "observations": 8,
+      "mean_wait_min": 0.0,
+      "max_wait_min": 0.0,
+      "waiting_pct": 0.0,
+      "growth_fraction": 0.0,
+      "classification": "no_observed_queue"
+    },
+    "B_picco_temporaneo": {
+      "activity": "Fresatura CNC",
+      "observations": 8,
+      "mean_wait_min": 3.375,
+      "max_wait_min": 18.0,
+      "waiting_pct": 25.0,
+      "growth_fraction": 0.2857142857142857,
+      "classification": "recovered_queue"
+    },
+    "C_sovraccarico": {
+      "activity": "Fresatura CNC",
+      "observations": 8,
+      "mean_wait_min": 17.5,
+      "max_wait_min": 35.0,
+      "waiting_pct": 87.5,
+      "growth_fraction": 1.0,
+      "classification": "growing_queue"
+    }
+  },
+  "incomplete_sample": {
+    "activity": "Fresatura CNC",
+    "observations": 3,
+    "mean_wait_min": 5.0,
+    "max_wait_min": 10.0,
+    "waiting_pct": 66.66666666666667,
+    "growth_fraction": 1.0,
+    "classification": "inconclusive"
+  },
+  "status": "passed"
+}

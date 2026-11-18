@@ -1,0 +1,27 @@
+{
+  "experiment": "EXP-03",
+  "dataset": "synthetic_manufacturing.csv",
+  "events": 17,
+  "cases": 4,
+  "python_version": "3.14.4",
+  "pm4py_version": "2.7.23.11",
+  "pandas_version": "2.3.3",
+  "variants": [
+    {
+      "variant": "Taglio -> Fresatura -> Saldatura -> Controllo",
+      "cases": 3,
+      "percentage": 75.0
+    },
+    {
+      "variant": "Taglio -> Fresatura -> Fresatura -> Saldatura -> Controllo",
+      "cases": 1,
+      "percentage": 25.0
+    }
+  ],
+  "repeated_activities": {
+    "Fresatura": 1
+  },
+  "independent_check": "passed",
+  "regression_test": "passed",
+  "interpretation_limit": "Una ripetizione non dimostra automaticamente una rilavorazione dovuta a un difetto."
+}

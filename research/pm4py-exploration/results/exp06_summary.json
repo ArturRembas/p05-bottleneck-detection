@@ -1,0 +1,67 @@
+{
+  "experiment": "EXP-06",
+  "pm4py_version": "2.7.23.11",
+  "baseline": {
+    "capacity_configuration": 1,
+    "metrics": [
+      {
+        "activity": "Controllo",
+        "observations": 8,
+        "mean_wait_min": 0.0,
+        "max_wait_min": 0.0,
+        "cases_waiting_pct": 0.0,
+        "mean_service_min": 3.0
+      },
+      {
+        "activity": "Fresatura CNC",
+        "observations": 8,
+        "mean_wait_min": 17.5,
+        "max_wait_min": 35.0,
+        "cases_waiting_pct": 87.5,
+        "mean_service_min": 12.0
+      },
+      {
+        "activity": "Taglio",
+        "observations": 8,
+        "mean_wait_min": 0.0,
+        "max_wait_min": 0.0,
+        "cases_waiting_pct": 0.0,
+        "mean_service_min": 4.0
+      }
+    ],
+    "candidates": [
+      "Fresatura CNC"
+    ]
+  },
+  "intervention": {
+    "capacity_configuration": 2,
+    "metrics": [
+      {
+        "activity": "Controllo",
+        "observations": 8,
+        "mean_wait_min": 0.0,
+        "max_wait_min": 0.0,
+        "cases_waiting_pct": 0.0,
+        "mean_service_min": 3.0
+      },
+      {
+        "activity": "Fresatura CNC",
+        "observations": 8,
+        "mean_wait_min": 0.0,
+        "max_wait_min": 0.0,
+        "cases_waiting_pct": 0.0,
+        "mean_service_min": 12.0
+      },
+      {
+        "activity": "Taglio",
+        "observations": 8,
+        "mean_wait_min": 0.0,
+        "max_wait_min": 0.0,
+        "cases_waiting_pct": 0.0,
+        "mean_service_min": 4.0
+      }
+    ],
+    "candidates": []
+  },
+  "regression_test": "passed"
+}

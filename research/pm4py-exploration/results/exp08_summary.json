@@ -1,0 +1,80 @@
+{
+  "A_regolare": {
+    "waits_min": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "mean_wait_min": 0.0,
+    "first_half_mean_min": 0.0,
+    "second_half_mean_min": 0.0,
+    "hotspot_detected": false,
+    "metrics": [
+      {
+        "activity": "Fresatura CNC",
+        "observations": 8,
+        "mean_wait_min": 0.0,
+        "max_wait_min": 0.0,
+        "waiting_pct": 0.0,
+        "service_min": 10.0
+      }
+    ]
+  },
+  "B_picco_temporaneo": {
+    "waits_min": [
+      0.0,
+      9.0,
+      18.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "mean_wait_min": 3.375,
+    "first_half_mean_min": 6.75,
+    "second_half_mean_min": 0.0,
+    "hotspot_detected": true,
+    "metrics": [
+      {
+        "activity": "Fresatura CNC",
+        "observations": 8,
+        "mean_wait_min": 3.375,
+        "max_wait_min": 18.0,
+        "waiting_pct": 25.0,
+        "service_min": 10.0
+      }
+    ]
+  },
+  "C_sovraccarico": {
+    "waits_min": [
+      0.0,
+      5.0,
+      10.0,
+      15.0,
+      20.0,
+      25.0,
+      30.0,
+      35.0
+    ],
+    "mean_wait_min": 17.5,
+    "first_half_mean_min": 7.5,
+    "second_half_mean_min": 27.5,
+    "hotspot_detected": true,
+    "metrics": [
+      {
+        "activity": "Fresatura CNC",
+        "observations": 8,
+        "mean_wait_min": 17.5,
+        "max_wait_min": 35.0,
+        "waiting_pct": 87.5,
+        "service_min": 12.0
+      }
+    ]
+  }
+}

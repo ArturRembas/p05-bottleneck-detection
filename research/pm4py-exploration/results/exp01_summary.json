@@ -1,0 +1,25 @@
+{
+  "experiment": "EXP-01",
+  "dataset": "synthetic_manufacturing.csv",
+  "dataset_sha256": "ef401b927bb6347ffcc9697f1d2c878ed42b597792876d7f5d9135404c311c1d",
+  "python": "3.14.4",
+  "pm4py": "2.7.23.11",
+  "pandas": "2.3.3",
+  "events": 17,
+  "cases": 4,
+  "activities": [
+    "Controllo",
+    "Fresatura",
+    "Saldatura",
+    "Taglio"
+  ],
+  "dfg_edges": 4,
+  "starts": {
+    "Taglio": 4
+  },
+  "ends": {
+    "Controllo": 4
+  },
+  "method": "pm4py.discover_dfg",
+  "interpretation": "frequenza delle transizioni direttamente successive, non tempo di attesa"
+}

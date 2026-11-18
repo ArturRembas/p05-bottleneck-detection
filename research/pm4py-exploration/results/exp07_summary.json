@@ -1,0 +1,110 @@
+{
+  "experiment": "EXP-07",
+  "pm4py_version": "2.7.23.11",
+  "cases_per_scenario": 12,
+  "correct_scenarios": 3,
+  "total_scenarios": 3,
+  "results": {
+    "A_cnc_critica": {
+      "expected": [
+        "Fresatura CNC"
+      ],
+      "detected": [
+        "Fresatura CNC"
+      ],
+      "passed": true,
+      "metrics": [
+        {
+          "activity": "Controllo",
+          "observations": 12,
+          "mean_wait_min": 0.0,
+          "max_wait_min": 0.0,
+          "waiting_pct": 0.0,
+          "service_min": 3.0
+        },
+        {
+          "activity": "Fresatura CNC",
+          "observations": 12,
+          "mean_wait_min": 27.5,
+          "max_wait_min": 55.0,
+          "waiting_pct": 91.66666666666666,
+          "service_min": 12.0
+        },
+        {
+          "activity": "Taglio",
+          "observations": 12,
+          "mean_wait_min": 0.0,
+          "max_wait_min": 0.0,
+          "waiting_pct": 0.0,
+          "service_min": 4.0
+        }
+      ]
+    },
+    "B_taglio_critico": {
+      "expected": [
+        "Taglio"
+      ],
+      "detected": [
+        "Taglio"
+      ],
+      "passed": true,
+      "metrics": [
+        {
+          "activity": "Controllo",
+          "observations": 12,
+          "mean_wait_min": 0.0,
+          "max_wait_min": 0.0,
+          "waiting_pct": 0.0,
+          "service_min": 3.0
+        },
+        {
+          "activity": "Fresatura CNC",
+          "observations": 12,
+          "mean_wait_min": 0.0,
+          "max_wait_min": 0.0,
+          "waiting_pct": 0.0,
+          "service_min": 4.0
+        },
+        {
+          "activity": "Taglio",
+          "observations": 12,
+          "mean_wait_min": 27.5,
+          "max_wait_min": 55.0,
+          "waiting_pct": 91.66666666666666,
+          "service_min": 12.0
+        }
+      ]
+    },
+    "C_lenta_senza_coda": {
+      "expected": [],
+      "detected": [],
+      "passed": true,
+      "metrics": [
+        {
+          "activity": "Controllo",
+          "observations": 12,
+          "mean_wait_min": 0.0,
+          "max_wait_min": 0.0,
+          "waiting_pct": 0.0,
+          "service_min": 3.0
+        },
+        {
+          "activity": "Fresatura CNC",
+          "observations": 12,
+          "mean_wait_min": 0.0,
+          "max_wait_min": 0.0,
+          "waiting_pct": 0.0,
+          "service_min": 20.0
+        },
+        {
+          "activity": "Taglio",
+          "observations": 12,
+          "mean_wait_min": 0.0,
+          "max_wait_min": 0.0,
+          "waiting_pct": 0.0,
+          "service_min": 4.0
+        }
+      ]
+    }
+  }
+}

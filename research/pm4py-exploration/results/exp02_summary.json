@@ -1,0 +1,64 @@
+{
+  "experiment": "EXP-02",
+  "dataset": "synthetic_manufacturing.csv",
+  "dataset_sha256": "ef401b927bb6347ffcc9697f1d2c878ed42b597792876d7f5d9135404c311c1d",
+  "python": "3.14.4",
+  "pm4py": "2.7.23.11",
+  "pandas": "2.3.3",
+  "cases": 4,
+  "events": 17,
+  "method": "pm4py.discover_performance_dfg(perf_aggregation_key='mean')",
+  "time_unit": "seconds (converted to minutes in CSV)",
+  "metric_semantics": "mean elapsed time between consecutive event timestamps per DFG edge",
+  "NOT_waiting_time": true,
+  "manual_crosscheck": "passed",
+  "default_dataset_regression": "passed",
+  "start_activities": {
+    "Taglio": 4
+  },
+  "end_activities": {
+    "Controllo": 4
+  },
+  "transitions": [
+    {
+      "source": "Fresatura",
+      "target": "Fresatura",
+      "occurrences": 1,
+      "pm4py_mean_seconds": 2520.0,
+      "pm4py_mean_minutes": 42.0,
+      "manual_mean_seconds": 2520.0,
+      "min_seconds": 2520.0,
+      "max_seconds": 2520.0
+    },
+    {
+      "source": "Fresatura",
+      "target": "Saldatura",
+      "occurrences": 4,
+      "pm4py_mean_seconds": 2130.0,
+      "pm4py_mean_minutes": 35.5,
+      "manual_mean_seconds": 2130.0,
+      "min_seconds": 1800.0,
+      "max_seconds": 2400.0
+    },
+    {
+      "source": "Saldatura",
+      "target": "Controllo",
+      "occurrences": 4,
+      "pm4py_mean_seconds": 1275.0,
+      "pm4py_mean_minutes": 21.25,
+      "manual_mean_seconds": 1275.0,
+      "min_seconds": 1200.0,
+      "max_seconds": 1500.0
+    },
+    {
+      "source": "Taglio",
+      "target": "Fresatura",
+      "occurrences": 4,
+      "pm4py_mean_seconds": 1065.0,
+      "pm4py_mean_minutes": 17.75,
+      "manual_mean_seconds": 1065.0,
+      "min_seconds": 900.0,
+      "max_seconds": 1200.0
+    }
+  ]
+}
