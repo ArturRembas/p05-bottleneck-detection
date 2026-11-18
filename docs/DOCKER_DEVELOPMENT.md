@@ -4,7 +4,7 @@
 
 The `master` branch currently has package scaffolds but no FastAPI application or Streamlit script to start. The `app` Compose profile is deliberately **not runnable as an application** yet. The proposed Dockerfiles build base Python images, NOT a finished P05 product. Backend/frontend lock files and application entrypoints are explicit integration gates.
 
-The `research` service is **one-shot tooling only**, not a third application container and not a production dependency. PR #8 is open and its research tree is not present in `master`.
+The `research` service is **one-shot tooling only**, not a third application container and not a production dependency. PR #8 has been merged into `master`. The historical research baseline is available under `research/pm4py-exploration/`.
 
 ## Prerequisites
 
@@ -23,13 +23,12 @@ docker compose --profile app config
 docker compose --profile app build
 ```
 
-## Historical research WITHOUT merging PR #8
+## Historical research (PR #8 merged)
 
 ```sh
-git fetch origin research/pm4py-exploration
-git worktree add ../p05-research origin/research/pm4py-exploration
-# Set P05_RESEARCH_SOURCE in .env to absolute path:
-# /.../p05-research/research/pm4py-exploration
+# Run from a checkout containing both merged PRs.
+# Set the research source to the repository's research directory:
+printf 'P05_RESEARCH_SOURCE=%s/research/pm4py-exploration\n' "$(pwd)" >> .env
 # Research baseline audit (does not change source):
 docker compose --profile research build research
 docker compose --profile research run --rm research verify

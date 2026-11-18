@@ -2,7 +2,7 @@
 
 ## Source state
 - `master` is the actual default/integration branch; do not rename it in this change.
-- PR #8 is still open; never assume its contents exist in `master`.
+- PR #8 has been merged into `master`; its research baseline is available under `research/pm4py-exploration/`.
 - Existing `contracts/draft-v0.1/` is not changed.
 
 ## Suggested issue
@@ -25,7 +25,7 @@
 7. Review the checksum manifest and explicitly enumerate missing historical logs.
 8. `contracts/draft-v0.1/` unchanged; no API semantics changed.
 9. No credentials/raw sensitive data or IDE-specific configuration committed.
-10. Another team member reviews before merge; PR #8 remains an independent review/merge decision.
+10. Another team member reviews PR #9 before merge. PR #8 has already been merged independently.
 
 ## Subsequent PRs
 1. `feat/minimal-api-health` — real FastAPI entrypoint and health endpoint, test and locked runtime image.

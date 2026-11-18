@@ -1,4 +1,4 @@
-# Exact historical audit pins from PR #8 (not hash-locked and not yet Docker-verified).
+# Exact historical audit pins from PR #8 (validated on Ubuntu with Docker; not hash-locked).
 contourpy==1.4.0
 cvxopt==1.3.3
 cycler==0.12.1
