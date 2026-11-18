@@ -1,0 +1,535 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "P05 \u2014 Bottleneck Detection in Processes API",
+    "description": "Componente del framework AI Puzzle. Espone contratti OpenAPI 3.1 per l'analisi di colli di bottiglia, vincoli di capacit\u00e0 e KPI di processo.",
+    "version": "0.2.0"
+  },
+  "paths": {
+    "/api/v1/analyses/{analysis_id}/bottlenecks": {
+      "get": {
+        "tags": [
+          "Interoperability P06 / P20"
+        ],
+        "summary": "Get Bottlenecks",
+        "description": "Fornisce l'elenco ordinato delle stazioni critiche e dei colli di\n\nbottiglia candidati ai moduli a valle: P06 (Schedulazione) e P20 (Risorse).",
+        "operationId": "get_bottlenecks_api_v1_analyses__analysis_id__bottlenecks_get",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateBottleneck"
+                  },
+                  "title": "Response Get Bottlenecks Api V1 Analyses  Analysis Id  Bottlenecks Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/kpis": {
+      "get": {
+        "tags": [
+          "Interoperability P17"
+        ],
+        "summary": "Get Process Kpis",
+        "description": "Esporta i KPI globali di processo (tempo di throughput, intervalli di\n\ntransizione) a beneficio del modulo P17 (Data Analytics).",
+        "operationId": "get_process_kpis_api_v1_analyses__analysis_id__kpis_get",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProcessKPI"
+                  },
+                  "title": "Response Get Process Kpis Api V1 Analyses  Analysis Id  Kpis Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/full-report": {
+      "get": {
+        "tags": [
+          "Full Analysis Result"
+        ],
+        "summary": "Get Full Analysis",
+        "description": "Restituisce il payload strutturato completo dell'analisi conforme alla\n\nSezione 7.1 della SRS v0.2.",
+        "operationId": "get_full_analysis_api_v1_analyses__analysis_id__full_report_get",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResultPayload"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/countermeasures/approve": {
+      "post": {
+        "tags": [
+          "Human-in-the-Loop Governance (D24/UC11)"
+        ],
+        "summary": "Approve Countermeasure",
+        "description": "Registra la convalida esplicita dell'analista umano (HITL Gate).\n\nNessuna raccomandazione operativa viene notificata a P06/P20 senza questa\napprovazione.",
+        "operationId": "approve_countermeasure_api_v1_countermeasures_approve_post",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID dell'analisi",
+              "title": "Analysis Id"
+            },
+            "description": "ID dell'analisi"
+          },
+          {
+            "name": "workstation",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Stazione approvata",
+              "title": "Workstation"
+            },
+            "description": "Stazione approvata"
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Azione convalidata",
+              "title": "Action"
+            },
+            "description": "Azione convalidata"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/export-bpmn": {
+      "get": {
+        "tags": [
+          "Export & Interoperability P21"
+        ],
+        "summary": "Export Bpmn",
+        "description": "Esporta il modello formale di processo scoperto in formato standard BPMN\n\n2.0 XML per P21 (What-If).",
+        "operationId": "export_bpmn_api_v1_analyses__analysis_id__export_bpmn_get",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AIInterpretation": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Tipo di asserzione: hypothesis, explanatory, limitation",
+            "default": "hypothesis"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Spiegazione contestuale o contromisura proposta"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Refs",
+            "description": "Riferimenti a metriche deterministiche certe"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "AIInterpretation"
+      },
+      "AnalysisResultPayload": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "title": "Schema Version",
+            "default": "draft-0.2"
+          },
+          "analysis_id": {
+            "type": "string",
+            "title": "Analysis Id",
+            "description": "Identificativo univoco della sessione di analisi"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "source": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Source",
+            "description": "Metadati del log (versione, hash sorgente, semantica temporale)"
+          },
+          "capabilities": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Capabilities",
+            "description": "Capability consentite dal log (process_discovery, service_duration, queue_length)"
+          },
+          "kpis": {
+            "items": {
+              "$ref": "#/components/schemas/ProcessKPI"
+            },
+            "type": "array",
+            "title": "Kpis",
+            "description": "Lista dei KPI misurati o derivati"
+          },
+          "candidate_bottlenecks": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateBottleneck"
+            },
+            "type": "array",
+            "title": "Candidate Bottlenecks",
+            "description": "Candidati colli di bottiglia identificati dal core deterministico"
+          },
+          "ai_interpretations": {
+            "items": {
+              "$ref": "#/components/schemas/AIInterpretation"
+            },
+            "type": "array",
+            "title": "Ai Interpretations",
+            "description": "Ipotesi dell'AI e contromisure suggerite"
+          },
+          "simulated_scenarios": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Simulated Scenarios",
+            "description": "Esiti di eventuali simulazioni what-if SimPy"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations",
+            "description": "Disclaimer e vincoli sui dati non inferibili"
+          }
+        },
+        "type": "object",
+        "required": [
+          "analysis_id",
+          "source",
+          "capabilities"
+        ],
+        "title": "AnalysisResultPayload"
+      },
+      "BottleneckSeverity": {
+        "type": "string",
+        "enum": [
+          "LOW",
+          "MEDIUM",
+          "HIGH",
+          "CRITICAL"
+        ],
+        "title": "BottleneckSeverity"
+      },
+      "CandidateBottleneck": {
+        "properties": {
+          "activity": {
+            "type": "string",
+            "title": "Activity",
+            "description": "Nome della stazione o fase di processo"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank",
+            "description": "Posizione nella graduatoria di congestione (1 = peggiore)"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "Metodo algoritmico applicato",
+            "default": "statistical_inter_event_gap"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/BottleneckSeverity",
+            "description": "Livello di criticit\u00e0 stimato"
+          },
+          "waiting_time_hours": {
+            "type": "number",
+            "title": "Waiting Time Hours",
+            "description": "Tempo medio di intervallo/attesa in ore"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Refs",
+            "description": "Riferimenti tracciabili agli ID KPI o run"
+          },
+          "validation": {
+            "$ref": "#/components/schemas/ValidationStatus",
+            "description": "Stato del gate di Human Oversight",
+            "default": "pending"
+          }
+        },
+        "type": "object",
+        "required": [
+          "activity",
+          "rank",
+          "severity",
+          "waiting_time_hours"
+        ],
+        "title": "CandidateBottleneck"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MetricStatus": {
+        "type": "string",
+        "enum": [
+          "measured",
+          "derived",
+          "estimated",
+          "unavailable"
+        ],
+        "title": "MetricStatus"
+      },
+      "ProcessKPI": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric",
+            "description": "Identificativo metrica (es. observed_transition_gap, throughput_time)"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value",
+            "description": "Valore numerico calcolato"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "description": "Unit\u00e0 di misura (min, hours, ratio)"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MetricStatus",
+            "description": "Stato di affidabilit\u00e0 del dato secondo i campi disponibili"
+          },
+          "sample_size": {
+            "type": "integer",
+            "title": "Sample Size",
+            "description": "Numero di casi/eventi su cui \u00e8 calcolata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "value",
+          "unit",
+          "status",
+          "sample_size"
+        ],
+        "title": "ProcessKPI"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ValidationStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ],
+        "title": "ValidationStatus"
+      }
+    }
+  }
+}
