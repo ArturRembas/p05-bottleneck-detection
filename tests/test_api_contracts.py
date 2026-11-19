@@ -1,4 +1,9 @@
-cat << 'EOF' > tests/test_api_contracts.py
+import sys
+from pathlib import Path
+
+# Aggiunge la cartella radice del progetto a sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from fastapi.testclient import TestClient
 from api.main import app
 
@@ -38,4 +43,3 @@ def test_approval_rejects_without_implementation():
     response = client.post("/api/v1/analyses/run-demo-001/countermeasures/approve", json=payload)
     assert response.status_code == 501
     assert response.json()["code"] == "APPROVAL_SERVICE_NOT_IMPLEMENTED"
-EOF
