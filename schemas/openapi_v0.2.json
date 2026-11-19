@@ -1,0 +1,1316 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "P05 \u2014 Bottleneck Detection in Processes API",
+    "description": "API for P05 \u2014 Bottleneck Detection in Processes",
+    "version": "0.2.0"
+  },
+  "paths": {
+    "/api/v1/analyses": {
+      "post": {
+        "tags": [
+          "Analysis ingestion and processing"
+        ],
+        "summary": "Create an analysis",
+        "description": "Accepts a CSV or XES event log. The contract scaffold validates basic upload constraints. Actual ingestion, PM4Py analysis and result persistence are not implemented in this file.",
+        "operationId": "create_analysis_api_v1_analyses_post",
+        "parameters": [
+          {
+            "name": "case_id_col",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "default": "Case_ID",
+              "title": "Case Id Col"
+            }
+          },
+          {
+            "name": "activity_col",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "default": "Activity",
+              "title": "Activity Col"
+            }
+          },
+          {
+            "name": "timestamp_col",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "default": "Timestamp",
+              "title": "Timestamp Col"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_analysis_api_v1_analyses_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResultPayload"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Uploaded file exceeds the configured size limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported event-log format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "The corresponding application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/bottlenecks": {
+      "get": {
+        "tags": [
+          "Interoperability P06 / P20"
+        ],
+        "summary": "Get candidate bottlenecks",
+        "operationId": "get_bottlenecks_api_v1_analyses__analysis_id__bottlenecks_get",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateBottleneck"
+                  },
+                  "title": "Response Get Bottlenecks Api V1 Analyses  Analysis Id  Bottlenecks Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Analysis or requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "The corresponding application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/kpis": {
+      "get": {
+        "tags": [
+          "Interoperability P17"
+        ],
+        "summary": "Get process KPIs",
+        "operationId": "get_process_kpis_api_v1_analyses__analysis_id__kpis_get",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProcessKPI"
+                  },
+                  "title": "Response Get Process Kpis Api V1 Analyses  Analysis Id  Kpis Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Analysis or requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "The corresponding application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/full-report": {
+      "get": {
+        "tags": [
+          "Full analysis result"
+        ],
+        "summary": "Get the full analysis report",
+        "operationId": "get_full_analysis_api_v1_analyses__analysis_id__full_report_get",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResultPayload"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Analysis or requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "The corresponding application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/countermeasures/approve": {
+      "post": {
+        "tags": [
+          "Human oversight"
+        ],
+        "summary": "Approve a countermeasure",
+        "description": "Human approval contract. A real implementation must authenticate the supervisor, derive approver_id from the trusted security context and persist an audit record. Approval must not imply that the countermeasure has been executed.",
+        "operationId": "approve_countermeasure_api_v1_analyses__analysis_id__countermeasures_approve_post",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Analysis or requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with the current resource state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "The corresponding application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/export-bpmn": {
+      "get": {
+        "tags": [
+          "Export and interoperability P21"
+        ],
+        "summary": "Export the discovered process as BPMN XML",
+        "description": "Returns BPMN 2.0 XML when the discovery and export services are implemented.",
+        "operationId": "export_bpmn_api_v1_analyses__analysis_id__export_bpmn_get",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "BPMN 2.0 XML document",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Analysis or requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "The corresponding application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Technical"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AIInterpretation": {
+        "properties": {
+          "interpretation_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Interpretation Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/AIInterpretationType"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Refs"
+          },
+          "model_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Name"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "interpretation_id",
+          "type",
+          "text"
+        ],
+        "title": "AIInterpretation"
+      },
+      "AIInterpretationType": {
+        "type": "string",
+        "enum": [
+          "hypothesis",
+          "explanatory",
+          "limitation"
+        ],
+        "title": "AIInterpretationType"
+      },
+      "AnalysisResultPayload": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "0.2.0",
+            "title": "Schema Version",
+            "default": "0.2.0"
+          },
+          "analysis_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Analysis Id"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AnalysisStatus"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceMetadata"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/CapabilityReport"
+          },
+          "kpis": {
+            "items": {
+              "$ref": "#/components/schemas/ProcessKPI"
+            },
+            "type": "array",
+            "title": "Kpis"
+          },
+          "candidate_bottlenecks": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateBottleneck"
+            },
+            "type": "array",
+            "title": "Candidate Bottlenecks"
+          },
+          "ai_interpretations": {
+            "items": {
+              "$ref": "#/components/schemas/AIInterpretation"
+            },
+            "type": "array",
+            "title": "Ai Interpretations"
+          },
+          "simulated_scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/SimulationScenarioResult"
+            },
+            "type": "array",
+            "title": "Simulated Scenarios"
+          },
+          "limitations": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetLimitation"
+            },
+            "type": "array",
+            "title": "Limitations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "analysis_id",
+          "timestamp",
+          "status",
+          "source",
+          "capabilities"
+        ],
+        "title": "AnalysisResultPayload"
+      },
+      "AnalysisStatus": {
+        "type": "string",
+        "enum": [
+          "completed",
+          "completed_with_limitations"
+        ],
+        "title": "AnalysisStatus"
+      },
+      "ApprovalRequest": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Candidate Id"
+          },
+          "countermeasure_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Countermeasure Id"
+          },
+          "workstation": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Workstation"
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Action"
+          },
+          "supervisor_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Notes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "countermeasure_id",
+          "workstation",
+          "action"
+        ],
+        "title": "ApprovalRequest"
+      },
+      "ApprovalResponse": {
+        "properties": {
+          "approval_id": {
+            "type": "string",
+            "title": "Approval Id"
+          },
+          "analysis_id": {
+            "type": "string",
+            "title": "Analysis Id"
+          },
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id"
+          },
+          "countermeasure_id": {
+            "type": "string",
+            "title": "Countermeasure Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "approved",
+            "title": "Status"
+          },
+          "approver_id": {
+            "type": "string",
+            "title": "Approver Id",
+            "description": "Must be populated from the authenticated user context, never trusted from client input"
+          },
+          "approval_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Approval Timestamp"
+          },
+          "supervisor_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Notes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_id",
+          "analysis_id",
+          "candidate_id",
+          "countermeasure_id",
+          "status",
+          "approver_id",
+          "approval_timestamp"
+        ],
+        "title": "ApprovalResponse"
+      },
+      "Body_create_analysis_api_v1_analyses_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "Event log in CSV or XES format"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_create_analysis_api_v1_analyses_post"
+      },
+      "BottleneckSeverity": {
+        "type": "string",
+        "enum": [
+          "LOW",
+          "MEDIUM",
+          "HIGH",
+          "CRITICAL"
+        ],
+        "title": "BottleneckSeverity"
+      },
+      "CandidateBottleneck": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Candidate Id"
+          },
+          "activity": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Activity",
+            "description": "Activity or process step associated with the candidate"
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Rank",
+            "description": "Relative ranking; 1 indicates the highest priority"
+          },
+          "method": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Method",
+            "description": "Deterministic detection method identifier"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/BottleneckSeverity"
+          },
+          "waiting_time": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProcessKPI"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Waiting-time KPI, if assessed. If assessed but not computable, provide a ProcessKPI with status=unavailable rather than inventing a numeric value."
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Refs"
+          },
+          "review_status": {
+            "$ref": "#/components/schemas/CandidateReviewStatus",
+            "default": "pending"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "activity",
+          "rank",
+          "method",
+          "severity"
+        ],
+        "title": "CandidateBottleneck"
+      },
+      "CandidateReviewStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "confirmed",
+          "rejected"
+        ],
+        "title": "CandidateReviewStatus"
+      },
+      "CapabilityAssessment": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/CapabilityStatus"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Explanation of partial/unavailable capability"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "CapabilityAssessment"
+      },
+      "CapabilityReport": {
+        "properties": {
+          "process_discovery": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "kpi_calculation": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "bottleneck_detection": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "resource_analysis": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "bpmn_export": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "simulation": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "process_discovery",
+          "kpi_calculation",
+          "bottleneck_detection",
+          "resource_analysis",
+          "bpmn_export",
+          "simulation"
+        ],
+        "title": "CapabilityReport"
+      },
+      "CapabilityStatus": {
+        "type": "string",
+        "enum": [
+          "available",
+          "partial",
+          "unavailable"
+        ],
+        "title": "CapabilityStatus"
+      },
+      "DatasetLimitation": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Code",
+            "description": "Stable limitation identifier"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Description"
+          },
+          "affected_capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Capabilities"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "description"
+        ],
+        "title": "DatasetLimitation"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "issue": {
+            "type": "string",
+            "title": "Issue"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "issue"
+        ],
+        "title": "ErrorDetail"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "items": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            },
+            "type": "array",
+            "title": "Details"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorResponse"
+      },
+      "EventLogFormat": {
+        "type": "string",
+        "enum": [
+          "csv",
+          "xes"
+        ],
+        "title": "EventLogFormat"
+      },
+      "MetricProvenance": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Method",
+            "description": "Calculation method or algorithm identifier"
+          },
+          "input_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Input Fields",
+            "description": "Input event-log attributes used by the calculation"
+          },
+          "algorithm_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Algorithm Version",
+            "description": "Algorithm/version identifier when available"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Refs",
+            "description": "References to evidence records or intermediate calculations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "method"
+        ],
+        "title": "MetricProvenance"
+      },
+      "MetricStatus": {
+        "type": "string",
+        "enum": [
+          "measured",
+          "derived",
+          "estimated",
+          "unavailable"
+        ],
+        "title": "MetricStatus"
+      },
+      "ProcessKPI": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Metric",
+            "description": "Stable metric identifier"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Numeric value; null when status is unavailable"
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Unit",
+            "description": "Unit, for example seconds, hours, ratio, or count"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MetricStatus"
+          },
+          "time_semantics": {
+            "$ref": "#/components/schemas/TimeSemantics",
+            "description": "Temporal interpretation of the input data used for this KPI"
+          },
+          "sample_size": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Sample Size",
+            "description": "Number of observations used"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/MetricProvenance"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason",
+            "description": "Required when status=unavailable; explains why the value cannot be computed"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "metric",
+          "unit",
+          "status",
+          "time_semantics",
+          "sample_size",
+          "provenance"
+        ],
+        "title": "ProcessKPI"
+      },
+      "SimulationScenarioResult": {
+        "properties": {
+          "scenario_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Scenario Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SimulationStatus"
+          },
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Assumptions"
+          },
+          "outputs": {
+            "items": {
+              "$ref": "#/components/schemas/ProcessKPI"
+            },
+            "type": "array",
+            "title": "Outputs"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "scenario_id",
+          "status"
+        ],
+        "title": "SimulationScenarioResult"
+      },
+      "SimulationStatus": {
+        "type": "string",
+        "enum": [
+          "not_run",
+          "completed",
+          "failed"
+        ],
+        "title": "SimulationStatus"
+      },
+      "SourceMetadata": {
+        "properties": {
+          "format": {
+            "$ref": "#/components/schemas/EventLogFormat"
+          },
+          "input_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$",
+            "title": "Input Sha256"
+          },
+          "time_semantics": {
+            "$ref": "#/components/schemas/TimeSemantics"
+          },
+          "case_id_column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id Column"
+          },
+          "activity_column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity Column"
+          },
+          "timestamp_column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp Column"
+          },
+          "source_log_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Log Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "format",
+          "input_sha256",
+          "time_semantics"
+        ],
+        "title": "SourceMetadata"
+      },
+      "TimeSemantics": {
+        "type": "string",
+        "enum": [
+          "completion_only",
+          "start_and_complete",
+          "not_applicable",
+          "unknown"
+        ],
+        "title": "TimeSemantics",
+        "description": "Meaning of timestamps used by a temporal metric.\n\ncompletion_only means timestamps represent event/activity completion only;\nit does not establish activity start time, processing duration, or queue time."
+      }
+    }
+  }
+}
