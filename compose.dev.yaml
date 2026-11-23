@@ -1,0 +1,14 @@
+# Apply only after backend and frontend application entrypoints have been implemented.
+services:
+  backend:
+    build:
+      target: dev
+    volumes:
+      - ./:/workspace:ro
+      - ${P05_PRIVATE_DATA_DIR:-./.local/private-data}:/var/p05/data:ro
+      - ${P05_RESULTS_DIR:-./.local/results}:/var/p05/results
+    working_dir: /workspace
+  frontend:
+    volumes:
+      - ./:/workspace:ro
+    working_dir: /workspace
