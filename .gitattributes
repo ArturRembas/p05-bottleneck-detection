@@ -1,0 +1,7 @@
+# Preserve Unix line endings for Linux shell scripts
+*.sh text eol=lf
+
+# Preserve SHA-256 audited PM4Py research files
+research/pm4py-exploration/**/*.py text eol=lf
+research/pm4py-exploration/**/*.json text eol=lf
+research/pm4py-exploration/**/*.csv text eol=lf
