@@ -1,0 +1,93 @@
+Collecting jsonschema==4.26.0 (from jsonschema[format]==4.26.0)
+  Downloading jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+Collecting attrs>=22.2.0 (from jsonschema==4.26.0->jsonschema[format]==4.26.0)
+  Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting jsonschema-specifications>=2023.03.6 (from jsonschema==4.26.0->jsonschema[format]==4.26.0)
+  Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+Collecting referencing>=0.28.4 (from jsonschema==4.26.0->jsonschema[format]==4.26.0)
+  Downloading referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+Collecting rpds-py>=0.25.0 (from jsonschema==4.26.0->jsonschema[format]==4.26.0)
+  Downloading rpds_py-2026.9.1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+Collecting fqdn (from jsonschema[format]==4.26.0)
+  Downloading fqdn-1.6.0-py3-none-any.whl.metadata (9.4 kB)
+Collecting idna (from jsonschema[format]==4.26.0)
+  Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+Collecting isoduration (from jsonschema[format]==4.26.0)
+  Downloading isoduration-20.11.0-py3-none-any.whl.metadata (5.7 kB)
+Collecting jsonpointer>1.13 (from jsonschema[format]==4.26.0)
+  Downloading jsonpointer-3.12-py3-none-any.whl.metadata (2.7 kB)
+Collecting rfc3339-validator (from jsonschema[format]==4.26.0)
+  Downloading rfc3339_validator-0.1.4-py2.py3-none-any.whl.metadata (1.5 kB)
+Collecting rfc3987 (from jsonschema[format]==4.26.0)
+  Downloading rfc3987-1.3.8-py2.py3-none-any.whl.metadata (7.5 kB)
+Collecting uri-template (from jsonschema[format]==4.26.0)
+  Downloading uri_template-1.3.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting webcolors>=1.11 (from jsonschema[format]==4.26.0)
+  Downloading webcolors-25.10.0-py3-none-any.whl.metadata (2.2 kB)
+Collecting arrow>=0.15.0 (from isoduration->jsonschema[format]==4.26.0)
+  Downloading arrow-1.4.0-py3-none-any.whl.metadata (7.7 kB)
+Collecting python-dateutil>=2.7.0 (from arrow>=0.15.0->isoduration->jsonschema[format]==4.26.0)
+  Downloading python_dateutil-4.0.0-py3-none-any.whl.metadata (7.3 kB)
+Collecting tzdata (from arrow>=0.15.0->isoduration->jsonschema[format]==4.26.0)
+  Downloading tzdata-2026.6-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting six (from rfc3339-validator->jsonschema[format]==4.26.0)
+  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Downloading jsonschema-4.26.0-py3-none-any.whl (90 kB)
+Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+Downloading jsonpointer-3.12-py3-none-any.whl (10 kB)
+Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+Downloading referencing-0.37.0-py3-none-any.whl (26 kB)
+Downloading rpds_py-2026.9.1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (370 kB)
+Downloading webcolors-25.10.0-py3-none-any.whl (14 kB)
+Downloading fqdn-1.6.0-py3-none-any.whl (12 kB)
+Downloading idna-3.20-py3-none-any.whl (69 kB)
+Downloading isoduration-20.11.0-py3-none-any.whl (11 kB)
+Downloading arrow-1.4.0-py3-none-any.whl (68 kB)
+Downloading python_dateutil-4.0.0-py3-none-any.whl (92 kB)
+Downloading rfc3339_validator-0.1.4-py2.py3-none-any.whl (3.5 kB)
+Downloading rfc3987-1.3.8-py2.py3-none-any.whl (13 kB)
+Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)
+Downloading uri_template-1.3.0-py3-none-any.whl (11 kB)
+Installing collected packages: rfc3987, webcolors, uri-template, tzdata, six, rpds-py, jsonpointer, idna, fqdn, attrs, rfc3339-validator, referencing, python-dateutil, jsonschema-specifications, arrow, jsonschema, isoduration
+
+Successfully installed arrow-1.4.0 attrs-26.1.0 fqdn-1.6.0 idna-3.20 isoduration-20.11.0 jsonpointer-3.12 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 python-dateutil-4.0.0 referencing-0.37.0 rfc3339-validator-0.1.4 rfc3987-1.3.8 rpds-py-2026.9.1 six-1.17.0 tzdata-2026.6 uri-template-1.3.0 webcolors-25.10.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 25.1.1 -> 26.3
+[notice] To update, run: pip install --upgrade pip
+Python 3.13.5 | jsonschema 4.26.0
+Scope: structural validation and independent synthetic fixture oracles only.
+PASS metaschema: canonical_event_log.schema.json
+PASS metaschema: event_log_mapping.schema.json
+PASS structural expectation (accept): canonical_log.json
+PASS structural expectation (accept): confirmed_mapping.example.json
+PASS structural expectation (accept): xes_mapping.example.json
+PASS structural expectation (reject): validation/vc04_wrong_trace_scope.json
+PASS structural expectation (reject): validation/vc05_missing_activity.json
+PASS structural expectation (reject): validation/vc05_empty_events.json
+PASS structural expectation (reject): validation/vc05_missing_mapping.json
+PASS structural expectation (reject): validation/vc06_case_id.json
+PASS structural expectation (reject): validation/vc06_activity.json
+PASS structural expectation (reject): validation/vc06_timestamp.json
+PASS structural expectation (reject): validation/vc08_noncanonical_offset.json
+PASS structural expectation (accept): validation/vc12_cross_record_duplicate_id.json
+PASS structural expectation (accept): validation/vc16_proposed.json
+PASS structural expectation (accept): validation/vc16_rejected.json
+PASS structural expectation (accept): validation/vc16_stale_revision.json
+PASS structural expectation (accept): validation/vc16_wrong_hash.json
+PASS structural expectation (reject): validation/vc16_missing_confirmation.json
+PASS structural expectation (accept): validation/vc17_optional_nulls.json
+PASS structural expectation (reject): validation/vc17_missing_generated_index.json
+PASS structural expectation (reject): validation/vc18_unsupported_format.json
+PASS 20 catalogue entries and fixture references; 20 structural expectations.
+PASS VC-17 source checksum, illustrative mapping references, UTC and identity preservation (not trusted approval).
+PASS VC-01 completion-only arithmetic and expected adjacent edges.
+PASS VC-02 elapsed service and queue wait arithmetic.
+PASS VC-03 known paired lifecycle fixture (not a pairing algorithm).
+PASS VC-04 XML structure, trace scope, source checksum and offset arithmetic (not XES conformance).
+PASS VC-08 equal UTC instants.
+PASS VC-19 observed equal endpoints yield zero.
+PASS VC-20 expected within-case intervals only.
+PASS VC-16 fixtures contain mismatched references despite structural acceptance; runtime gate remains unimplemented.
+SUCCESS — design artifact checks only. Remaining VC outcomes require future implementation tests.

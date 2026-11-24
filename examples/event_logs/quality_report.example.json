@@ -1,0 +1,11 @@
+{
+  "quality_report_ref": "synthetic-quality-001",
+  "input_sha256": "f172179f3be3ea4fbdcef30731a524bd86c2105cf3d8345eb51c61e4fe5bf633",
+  "mapping_id": "mapping-example-001",
+  "mapping_version": 1,
+  "input_event_count": 1,
+  "normalized_event_count": 1,
+  "excluded_event_count": 0,
+  "diagnostics": [],
+  "note": "Illustrative associated report; not an approved report schema or runtime output."
+}

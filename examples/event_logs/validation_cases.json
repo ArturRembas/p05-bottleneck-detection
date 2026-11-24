@@ -1,0 +1,365 @@
+{
+  "schema_version": "0.1.0",
+  "status": "proposed design oracles; no ingestion tests",
+  "cases": [
+    {
+      "id": "VC-01",
+      "condition": "Minimal confirmed completion-only CSV (9.1)",
+      "expected": "Accept; observed DFG/gaps available, processing/queue waiting unavailable.",
+      "scope": "independent_fixture_oracle",
+      "fixtures": [
+        "completion_only.csv"
+      ],
+      "expected_values": {
+        "events": 4,
+        "cases": 1,
+        "edge_count": 3,
+        "gaps_seconds": [
+          1800,
+          2700,
+          900
+        ],
+        "case_span_seconds": 5400
+      }
+    },
+    {
+      "id": "VC-02",
+      "condition": "Enriched valid occurrence (9.2)",
+      "expected": "Accept; 900 s service, 600 s waiting; no capacity diagnosis.",
+      "scope": "independent_fixture_oracle",
+      "fixtures": [
+        "complete_temporal_log.csv"
+      ],
+      "expected_values": {
+        "service_seconds": 900,
+        "waiting_seconds": 600
+      }
+    },
+    {
+      "id": "VC-03",
+      "condition": "Correlated lifecycle events (9.3)",
+      "expected": "Preserve three observations; one completed occurrence and valid intervals if the correlation view is supported.",
+      "scope": "independent_fixture_oracle",
+      "fixtures": [
+        "paired_lifecycle.csv"
+      ],
+      "expected_values": {
+        "observations": 3,
+        "completed_occurrences": 1,
+        "service_seconds": 900,
+        "waiting_seconds": 600
+      }
+    },
+    {
+      "id": "VC-04",
+      "condition": "Valid XES trace (9.4)",
+      "expected": "Preserve trace/event scopes and normalize offsets; expected 4500 s gap.",
+      "scope": "independent_fixture_oracle",
+      "fixtures": [
+        "minimal_log.xes",
+        "xes_mapping.example.json",
+        "validation/vc04_wrong_trace_scope.json"
+      ],
+      "expected_values": {
+        "events": 2,
+        "gap_seconds": 4500,
+        "normalized_timestamps": [
+          "2026-10-01T08:00:00Z",
+          "2026-10-01T09:15:00Z"
+        ]
+      },
+      "schema_checks": [
+        {
+          "file": "xes_mapping.example.json",
+          "schema": "mapping",
+          "valid": true
+        },
+        {
+          "file": "validation/vc04_wrong_trace_scope.json",
+          "schema": "mapping",
+          "valid": false,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "VC-05",
+      "condition": "Empty source or missing required source column",
+      "expected": "Blocking validation failure.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc05_empty.csv",
+        "validation/vc05_missing_column.csv",
+        "validation/vc05_empty_events.json",
+        "validation/vc05_missing_mapping.json"
+      ],
+      "schema_checks": [
+        {
+          "file": "validation/vc05_missing_activity.json",
+          "schema": "canonical",
+          "valid": false
+        },
+        {
+          "file": "validation/vc05_empty_events.json",
+          "schema": "canonical",
+          "valid": false,
+          "note": ""
+        },
+        {
+          "file": "validation/vc05_missing_mapping.json",
+          "schema": "mapping",
+          "valid": false,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "VC-06",
+      "condition": "Null/blank case or activity; invalid mandatory timestamp",
+      "expected": "Blocking validation failure; no ready canonical log.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc06_null_case.csv",
+        "validation/vc06_blank_activity.csv",
+        "validation/vc06_invalid_timestamp.csv"
+      ],
+      "schema_checks": [
+        {
+          "file": "validation/vc06_case_id.json",
+          "schema": "canonical",
+          "valid": false
+        },
+        {
+          "file": "validation/vc06_activity.json",
+          "schema": "canonical",
+          "valid": false
+        },
+        {
+          "file": "validation/vc06_timestamp.json",
+          "schema": "canonical",
+          "valid": false
+        }
+      ]
+    },
+    {
+      "id": "VC-07",
+      "condition": "Offset-free timestamp without confirmed timezone; DST ambiguity without rule",
+      "expected": "Blocking temporal validation failure.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc07_naive.csv",
+        "validation/vc07_dst_ambiguous.csv",
+        "validation/vc07_dst_nonexistent.csv"
+      ],
+      "context": "No confirmed timezone for first fixture; Europe/Rome with no disambiguation rule for DST fixtures."
+    },
+    {
+      "id": "VC-08",
+      "condition": "`2026-10-01T10:00:00+02:00` and `2026-10-01T08:00:00Z`",
+      "expected": "Same canonical UTC instant; if within one case, a tie may exist.",
+      "scope": "independent_fixture_oracle",
+      "fixtures": [
+        "validation/vc08_offsets.csv",
+        "validation/vc08_noncanonical_offset.json"
+      ],
+      "schema_checks": [
+        {
+          "file": "validation/vc08_noncanonical_offset.json",
+          "schema": "canonical",
+          "valid": false,
+          "note": "Valid source instant, not normalized UTC."
+        }
+      ]
+    },
+    {
+      "id": "VC-09",
+      "condition": "`queue_entry` after valid service start",
+      "expected": "Keep valid observation; affected wait invalid, not zero; processing unaffected if its own prerequisites hold.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc09_queue_after_start.csv"
+      ]
+    },
+    {
+      "id": "VC-10",
+      "condition": "Confirmed completion before mapped start",
+      "expected": "Keep valid primary observation; inconsistent occurrence timing reported; processing invalid. A separately valid queue-entry/start pair requires independent consistency evidence before use.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc10_completion_before_start.csv"
+      ]
+    },
+    {
+      "id": "VC-11",
+      "condition": "Two equal-time events in a case with no authoritative sequence",
+      "expected": "Reproducible technical order; ambiguity disclosed; no causal order inferred.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc11_ties.csv"
+      ]
+    },
+    {
+      "id": "VC-12",
+      "condition": "Potential duplicate records without event identity",
+      "expected": "Flag; no automatic deletion. A duplicate declared `event_id` violates the identity constraint and is rejected.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc12_potential_duplicates.csv",
+        "validation/vc12_duplicate_event_id.csv"
+      ],
+      "schema_checks": [
+        {
+          "file": "validation/vc12_cross_record_duplicate_id.json",
+          "schema": "canonical",
+          "valid": true,
+          "note": "Structural pass is expected; semantic uniqueness must fail."
+        }
+      ]
+    },
+    {
+      "id": "VC-13",
+      "condition": "Two starts and one completion of same activity with no unambiguous instance association",
+      "expected": "Do not guess pairing; dependent duration unavailable or partial.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc13_ambiguous_lifecycle.csv"
+      ]
+    },
+    {
+      "id": "VC-14",
+      "condition": "Valid single timestamp with unknown meaning",
+      "expected": "Accept as an observation; event-level gap/discovery only when other prerequisites hold; no automatic completion semantics.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc14_unknown.csv"
+      ],
+      "context": "Confirmed timestamp_semantics=unknown; event-level view only."
+    },
+    {
+      "id": "VC-15",
+      "condition": "Two eligible occurrences, only one valid queue-entry/start pair",
+      "expected": "Waiting capability partial, coverage 1/2 occurrences, reason disclosed.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc15_partial_wait.csv"
+      ],
+      "expected_values": {
+        "eligible_waits": 1,
+        "occurrences": 2,
+        "waiting_status": "partial"
+      }
+    },
+    {
+      "id": "VC-16",
+      "condition": "Proposed/rejected mapping, stale revision, or mismatched source hash",
+      "expected": "No final normalization/analysis; require valid confirmation.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc16_proposed.json",
+        "validation/vc16_rejected.json",
+        "validation/vc16_stale_revision.json",
+        "validation/vc16_wrong_hash.json",
+        "validation/vc16_missing_confirmation.json"
+      ],
+      "schema_checks": [
+        {
+          "file": "validation/vc16_proposed.json",
+          "schema": "mapping",
+          "valid": true
+        },
+        {
+          "file": "validation/vc16_rejected.json",
+          "schema": "mapping",
+          "valid": true
+        },
+        {
+          "file": "validation/vc16_stale_revision.json",
+          "schema": "mapping",
+          "valid": true
+        },
+        {
+          "file": "validation/vc16_wrong_hash.json",
+          "schema": "mapping",
+          "valid": true
+        },
+        {
+          "file": "validation/vc16_missing_confirmation.json",
+          "schema": "mapping",
+          "valid": false
+        }
+      ]
+    },
+    {
+      "id": "VC-17",
+      "condition": "Identifier `0007`",
+      "expected": "Preserve exact significant string value.",
+      "scope": "independent_fixture_oracle",
+      "fixtures": [
+        "mapping_source.csv",
+        "confirmed_mapping.example.json",
+        "canonical_log.json",
+        "validation/vc17_optional_nulls.json",
+        "validation/vc17_missing_generated_index.json"
+      ],
+      "schema_checks": [
+        {
+          "file": "validation/vc17_optional_nulls.json",
+          "schema": "canonical",
+          "valid": true,
+          "note": ""
+        },
+        {
+          "file": "validation/vc17_missing_generated_index.json",
+          "schema": "canonical",
+          "valid": false,
+          "note": "Required on normalized record only, not on source."
+        }
+      ]
+    },
+    {
+      "id": "VC-18",
+      "condition": "Native OCEL input without reviewed projection",
+      "expected": "Unsupported by initial contract.",
+      "scope": "design_oracle_only",
+      "fixtures": [
+        "validation/vc18_unsupported_format.json"
+      ],
+      "schema_checks": [
+        {
+          "file": "validation/vc18_unsupported_format.json",
+          "schema": "mapping",
+          "valid": false,
+          "note": "Unsupported format declaration, not an OCEL parser test."
+        }
+      ]
+    },
+    {
+      "id": "VC-19",
+      "condition": "Valid queue entry equals service start",
+      "expected": "Derived zero waiting time, distinct from unavailable waiting time.",
+      "scope": "independent_fixture_oracle",
+      "fixtures": [
+        "validation/vc19_zero_wait.csv"
+      ],
+      "expected_values": {
+        "waiting_seconds": 0
+      }
+    },
+    {
+      "id": "VC-20",
+      "condition": "Multiple cases with adjacent timestamps",
+      "expected": "No DFG transition or gap across case boundaries.",
+      "scope": "independent_fixture_oracle",
+      "fixtures": [
+        "validation/vc20_case_boundaries.csv"
+      ],
+      "expected_values": {
+        "within_case_gaps_seconds": [
+          3600,
+          4440
+        ],
+        "edge_count": 2
+      }
+    }
+  ]
+}

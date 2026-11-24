@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<log xmlns="http://www.xes-standard.org/" xes.version="1.0">
+  <trace>
+    <string key="concept:name" value="P001"/>
+    <event>
+      <string key="concept:name" value="Cutting"/>
+      <date key="time:timestamp" value="2026-10-01T10:00:00+02:00"/>
+      <string key="lifecycle:transition" value="complete"/>
+    </event>
+    <event>
+      <string key="concept:name" value="Welding"/>
+      <date key="time:timestamp" value="2026-10-01T11:15:00+02:00"/>
+      <string key="lifecycle:transition" value="complete"/>
+    </event>
+  </trace>
+</log>

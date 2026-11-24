@@ -1,0 +1,4 @@
+# Preserve fixture bytes across operating systems for SHA-256 checks.
+*.csv text eol=lf
+*.xes text eol=lf
+*.json text eol=lf
