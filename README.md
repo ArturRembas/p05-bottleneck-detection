@@ -32,7 +32,7 @@ The approved project direction includes:
 
 **Approved architecture does not mean that every capability has been implemented.** The API contract, detector rules, calibration, authorization and initial MVP use-case subset require detailed review.
 
-## Proposed component layout
+## Repository layout
 
 ```text
 core/           # deterministic log ingestion, mining, detection, typed result models
@@ -44,14 +44,20 @@ tests/          # unit, integration and benchmark tests
 schemas/        # versioned machine-readable contracts
 examples/       # explicitly synthetic, non-sensitive examples
 docs/           # architecture, source traceability, governance and evaluation
-.github/        # issue forms, pull-request template and repository guidance
+.github/        # issue templates, pull-request template and repository guidance
+contracts/      # draft external exchange contracts
+data/synthetic/ # synthetic datasets
+research/       # historical PM4Py experiments (not production code)
+docker/         # application and research Dockerfiles
+requirements/   # dependency intents, not resolved runtime locks
+tools/          # research execution and checksum audit
 ```
 
-The directory layout is a **proposal for implementation**, not evidence that all modules are operational.
+The listed directories exist on `master`; their application modules are still scaffolds. The research archive is separate from the application. See [Docker development](docs/DOCKER_DEVELOPMENT.md) for current execution gates.
 
 ## Current development approach
 
-Start from the existing exploratory prototype and evolve it into a single verifiable path:
+Use the archived exploratory research as evidence, and develop a single verifiable application path:
 
 ```text
 Event log → Validation → Confirmed mapping → PM4Py metrics
@@ -73,18 +79,20 @@ These are **group-approved roadmap targets**, not certified academic deadlines o
 
 ## Getting started
 
+Git and Docker with Compose v2 are required; no host Python installation is needed for the shared environment.
+
 ```bash
-git clone git@github.com:OWNER/p05-bottleneck-detection.git
+git clone --branch master https://github.com/ArturRembas/p05-bottleneck-detection.git
 cd p05-bottleneck-detection
-python3 -m venv .venv
-source .venv/bin/activate
+git status --short
+docker compose --profile app config --quiet
 ```
 
-Replace `OWNER` with the actual GitHub account or organization. Install runtime dependencies from the tracked, tested requirements once the prototype migration PR is merged. The documentation-only scaffold is **not claimed to be runnable**.
+Follow [Docker development](docs/DOCKER_DEVELOPMENT.md) for local configuration, image builds and research runs. PR [#8](https://github.com/ArturRembas/p05-bottleneck-detection/pull/8) integrated EXP-01–EXP-10; PR [#9](https://github.com/ArturRembas/p05-bottleneck-detection/pull/9) integrated the shared container infrastructure and records cross-platform validation. The application images remain scaffolds until runtime dependencies and real entrypoints are integrated. Do not use `docker compose up` as proof of an operational application.
 
 ## Collaboration
 
-- `main` is the shared integration branch; use short-lived `feat/*`, `fix/*`, `docs/*`, or `chore/*` branches.
+- `master` is the shared integration branch; use short-lived `feat/*`, `fix/*`, `docs/*`, or `chore/*` branches.
 - Open a pull request for each coherent change; link relevant issues and include test evidence.
 - Never treat exploratory code, mock numbers or synthetic fixtures as verified production results.
 - Do not commit API keys, private event logs, confidential documents, virtual environments or generated databases.
@@ -107,4 +115,4 @@ Data must be used lawfully with documented provenance, privacy considerations an
 
 ## License
 
-**Not yet selected.** This repository is initially intended to be private; do not assume that source code or datasets may be redistributed until the group decides on a license and checks dataset rights.
+**Not yet selected.** The repository is public as of 24 November 2026. Public visibility does not itself grant a license to redistribute source code or datasets. Do not commit material without permission; license selection and dataset rights remain separate group decisions.

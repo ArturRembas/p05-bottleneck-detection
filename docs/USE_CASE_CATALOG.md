@@ -2,7 +2,7 @@
 
 **Source:** Decision Register P05 (12 November 2026), `Use Cases - Draft` worksheet.
 
-The catalogue contains **25 deterministic use cases D01–D25 and 13 agentic entries UC01–UC13**. **UC03 is an internal alternative of UC02**, not an independent top-level use case. The groups' approved architecture does not mean these individual scenarios or MVP boundaries have been ratified. Detailed GitHub Issue bodies in the accompanying `github-setup/issues/use-cases` are **proposals** to be reviewed against the complete Chat 02 specification.
+The catalogue contains **25 deterministic use cases D01–D25 and 13 agentic entries UC01–UC13**. **UC03 is an internal alternative of UC02**, not an independent top-level use case. The groups' approved architecture does not mean these individual scenarios or MVP boundaries have been ratified. Detailed use-case drafts from the initial planning package are **proposals** to be reconciled with the shared SRS and group review; the planning-package directory is not part of this repository.
 
 | ID | Title | Domain | Proposed planning phase | Status |
 | --- | --- | --- | --- | --- |

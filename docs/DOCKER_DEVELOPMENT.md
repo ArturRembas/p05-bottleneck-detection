@@ -1,8 +1,10 @@
-# P05 — Shared Docker development architecture (proposal, not merged)
+# P05 — Shared Docker development environment
 
 ## Current gates
 
-The `master` branch currently has package scaffolds but no FastAPI application or Streamlit script to start. The `app` Compose profile is deliberately **not runnable as an application** yet. The proposed Dockerfiles build base Python images, NOT a finished P05 product. Backend/frontend lock files and application entrypoints are explicit integration gates.
+The infrastructure is integrated on `master` through PR [#9](https://github.com/ArturRembas/p05-bottleneck-detection/pull/9). Its recorded validation covers Ubuntu, Fedora/Podman and Windows/WSL2; this is infrastructure and research evidence, not application acceptance.
+
+The `master` branch currently has package scaffolds but no FastAPI application or Streamlit script to start. The `app` Compose profile is deliberately **not runnable as an application** yet. The application Dockerfiles build scaffold images, NOT a finished P05 product. Backend/frontend lock files and application entrypoints are explicit integration gates.
 
 The `research` service is **one-shot tooling only**, not a third application container and not a production dependency. PR #8 has been merged into `master`. The historical research baseline is available under `research/pm4py-exploration/`.
 
@@ -13,22 +15,21 @@ Docker Engine or Docker Desktop with Compose v2; Git. No local Python installati
 ## Clone-clean setup
 
 ```sh
-git clone https://github.com/ArturRembas/p05-bottleneck-detection.git
+git clone --branch master https://github.com/ArturRembas/p05-bottleneck-detection.git
 cd p05-bottleneck-detection
 cp .env.docker.example .env
 mkdir -p .local/private-data .local/results .local/research-runs
-# After Docker proposal files are integrated:
-docker compose --profile app config
-# Build verifies Dockerfile parsing/base image only, not app dependencies:
+# Configuration and scaffold-image checks (not application runtime tests):
+docker compose --profile app config --quiet
 docker compose --profile app build
 ```
 
 ## Historical research (PR #8 merged)
 
 ```sh
-# Run from a checkout containing both merged PRs.
-# Set the research source to the repository's research directory:
-printf 'P05_RESEARCH_SOURCE=%s/research/pm4py-exploration\n' "$(pwd)" >> .env
+# Run from a checkout containing merged PRs #8 and #9.
+# Set P05_RESEARCH_SOURCE=./research/pm4py-exploration in .env once.
+# Edit the existing setting instead of appending duplicate keys.
 # Research baseline audit (does not change source):
 docker compose --profile research build research
 docker compose --profile research run --rm research verify
@@ -37,7 +38,7 @@ docker compose --profile research run --rm research EXP-01
 # Repeat EXP-02 ... EXP-10
 ```
 
-Research inputs are mounted `:ro`; scripts execute on a temporary copy and output to `.local/research-runs/<UTC>-EXP-XX-<pid>/`. The original historical archive is never overwritten. Hash audit reports historical run logs not committed to GitHub as missing. Store comparison reports and commit SHAs with future validation evidence.
+Research inputs are mounted `:ro`; scripts execute on a temporary copy and output to `.local/research-runs/<UTC>-EXP-XX-<pid>/`. The original historical archive is never overwritten. The PR #9 audit recorded 37 matching checksums, no mismatches and 10 missing historical run logs; inspect the actual audit output and investigate unexpected missing files or mismatches. Store comparison reports and commit SHAs with future validation evidence.
 
 Important: `research-lock.txt` records exact historical version pins, **not a fully reproducible hashed lock**. Rebuilding may fail due to wheel availability on Python 3.14.4; document failures and decide whether to adjust platform or create a separately labeled reproduction environment. Never silently change historical versions.
 
@@ -72,7 +73,7 @@ IDE configuration is local. Use terminal Docker Compose commands as the canonica
 
 ```sh
 docker compose --profile app config
-docker compose --profile app build --progress plain
+docker compose --progress plain --profile app build
 docker compose --profile app ps -a
 docker compose --profile app logs --tail=200 backend
 docker compose --profile app down --remove-orphans
