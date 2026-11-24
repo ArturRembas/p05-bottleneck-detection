@@ -9,3 +9,4 @@ research/pm4py-exploration/**/*.csv text eol=lf
 # Preserve original bytes of historical CSV artifacts stored with CRLF
 research/pm4py-exploration/results/exp01_dfg_frequency.csv -text !eol
 research/pm4py-exploration/results/exp02_performance_dfg.csv -text !eol
+research/pm4py-exploration/data/synthetic_manufacturing.csv -text !eol
