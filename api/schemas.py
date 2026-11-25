@@ -1,17 +1,45 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ContractModel(BaseModel):
-    """Base class: reject undocumented fields to keep the API contract strict."""
-
+    """Base model enforcing strict schema conformance and rejecting extra fields."""
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
+
+# =====================================================================
+# PR #16 ALIGNMENT: THREE EVIDENCE CATEGORIES & TARGETS
+# =====================================================================
+
+class EvidenceCategory(str, Enum):
+    """Evidence hierarchy defined in PR #16 (docs/DETECTOR_BASELINE.md)."""
+    L1_DELAY_HOTSPOT = "L1_delay_hotspot"              # Statistically long observed inter-event gap
+    L2_QUEUE_CANDIDATE = "L2_queue_candidate"          # Direct evidence of physical queue waiting
+    L3_CAPACITY_HYPOTHESIS = "L3_capacity_hypothesis"  # Hypothesis of persistent capacity saturation
+
+
+class TargetType(str, Enum):
+    """Target entity classification defined in PR #16."""
+    ACTIVITY = "activity"
+    TRANSITION = "transition"
+    WORKSTATION = "workstation"
+
+
+class BottleneckTarget(ContractModel):
+    target_type: TargetType = Field(..., description="Target type: workstation, activity, or transition")
+    target_name: str = Field(..., description="Identifier of the target activity or station")
+    source_activity: str | None = Field(default=None, description="Source activity if target is a transition")
+    station_id: str | None = Field(default=None, description="Physical workstation ID if explicitly mapped")
+
+
+# =====================================================================
+# PR #15 & PR #16: METRICS, CAPABILITIES & PROVENANCE
+# =====================================================================
 
 class MetricStatus(str, Enum):
     MEASURED = "measured"
@@ -21,12 +49,6 @@ class MetricStatus(str, Enum):
 
 
 class TimeSemantics(str, Enum):
-    """Meaning of timestamps used by a temporal metric.
-
-    completion_only means timestamps represent event/activity completion only;
-    it does not establish activity start time, processing duration, or queue time.
-    """
-
     COMPLETION_ONLY = "completion_only"
     START_AND_COMPLETE = "start_and_complete"
     NOT_APPLICABLE = "not_applicable"
@@ -39,38 +61,22 @@ class EventLogFormat(str, Enum):
 
 
 class MetricProvenance(ContractModel):
-    method: str = Field(min_length=1, description="Calculation method or algorithm identifier")
-    input_fields: list[str] = Field(
-        default_factory=list,
-        description="Input event-log attributes used by the calculation",
-    )
-    algorithm_version: str | None = Field(
-        default=None, description="Algorithm/version identifier when available"
-    )
-    evidence_refs: list[str] = Field(
-        default_factory=list,
-        description="References to evidence records or intermediate calculations",
-    )
+    method: str = Field(min_length=1, description="Calculation method identifier (e.g., maximum_mean_gap)")
+    evidence_category: EvidenceCategory = Field(default=EvidenceCategory.L1_DELAY_HOTSPOT)
+    input_fields: list[str] = Field(default_factory=list, description="Log attributes consumed")
+    algorithm_version: str | None = Field(default="0.1.0", description="Algorithm baseline version")
+    evidence_refs: list[str] = Field(default_factory=list, description="Traceable evidence identifiers")
 
 
 class ProcessKPI(ContractModel):
     metric: str = Field(min_length=1, description="Stable metric identifier")
-    value: float | None = Field(
-        default=None,
-        allow_inf_nan=False,
-        description="Numeric value; null when status is unavailable",
-    )
-    unit: str = Field(min_length=1, description="Unit, for example seconds, hours, ratio, or count")
+    value: float | None = Field(default=None, allow_inf_nan=False, description="Numeric value; null when unavailable")
+    unit: str = Field(min_length=1, description="Unit: seconds, hours, ratio, count")
     status: MetricStatus
-    time_semantics: TimeSemantics = Field(
-        description="Temporal interpretation of the input data used for this KPI"
-    )
-    sample_size: int = Field(ge=0, description="Number of observations used")
+    time_semantics: TimeSemantics
+    sample_size: int = Field(ge=0, description="Observations count")
     provenance: MetricProvenance
-    unavailable_reason: str | None = Field(
-        default=None,
-        description="Required when status=unavailable; explains why the value cannot be computed",
-    )
+    unavailable_reason: str | None = Field(default=None, description="Mandatory when status=unavailable")
 
     @model_validator(mode="after")
     def validate_availability(self) -> "ProcessKPI":
@@ -92,7 +98,7 @@ class CapabilityStatus(str, Enum):
 
 class CapabilityAssessment(ContractModel):
     status: CapabilityStatus
-    reason: str | None = Field(default=None, description="Explanation of partial/unavailable capability")
+    reason: str | None = Field(default=None, description="Explanation when partial or unavailable")
 
     @model_validator(mode="after")
     def explain_unavailable(self) -> "CapabilityAssessment":
@@ -110,20 +116,9 @@ class CapabilityReport(ContractModel):
     simulation: CapabilityAssessment
 
 
-class SourceMetadata(ContractModel):
-    format: EventLogFormat
-    input_sha256: str = Field(pattern=r"^[a-fA-F0-9]{64}$")
-    time_semantics: TimeSemantics
-    case_id_column: str | None = None
-    activity_column: str | None = None
-    timestamp_column: str | None = None
-    source_log_version: str | None = None
-
-
-class AnalysisStatus(str, Enum):
-    COMPLETED = "completed"
-    COMPLETED_WITH_LIMITATIONS = "completed_with_limitations"
-
+# =====================================================================
+# CANDIDATE BOTTLENECK (PR #16 COMPLIANT)
+# =====================================================================
 
 class BottleneckSeverity(str, Enum):
     LOW = "LOW"
@@ -140,19 +135,37 @@ class CandidateReviewStatus(str, Enum):
 
 class CandidateBottleneck(ContractModel):
     candidate_id: str = Field(min_length=1)
-    activity: str = Field(min_length=1, description="Activity or process step associated with the candidate")
-    rank: int = Field(ge=1, description="Relative ranking; 1 indicates the highest priority")
-    method: str = Field(min_length=1, description="Deterministic detection method identifier")
-    severity: BottleneckSeverity
-    waiting_time: ProcessKPI | None = Field(
-        default=None,
-        description=(
-            "Waiting-time KPI, if assessed. If assessed but not computable, provide a ProcessKPI "
-            "with status=unavailable rather than inventing a numeric value."
-        ),
-    )
+    target: BottleneckTarget = Field(..., description="Target activity, transition or workstation (AL-06)")
+    evidence_category: EvidenceCategory = Field(..., description="L1, L2 or L3 category per PR #16 (AL-05)")
+    rank: int = Field(ge=1, description="Ranking position based on maximum-mean-gap baseline")
+    ranking_group: int | None = Field(default=1, description="Priority cluster (AL-07)")
+
+    # Parametri di supporto minimo di PR #16 (almeno 3 osservazioni su 3 casi)
+    observations_count: int = Field(ge=0, description="Total valid observations (min support: 3)")
+    distinct_cases_count: int = Field(ge=0, description="Distinct cases affected (min support: 3)")
+    case_coverage_ratio: float = Field(ge=0.0, le=1.0, description="Ratio of cases affected")
+
+    # Severità opzionale: non forzata se i dati non la supportano (PR #16)
+    severity: BottleneckSeverity | None = Field(default=None, description="Optional severity classification")
+
+    observed_gap_hours: float | None = Field(default=None, description="Mean observed inter-event gap in hours")
+    waiting_time_hours: float | None = Field(default=None, description="Measured queue wait in hours (only for L2/L3)")
     evidence_refs: list[str] = Field(default_factory=list)
     review_status: CandidateReviewStatus = CandidateReviewStatus.PENDING
+
+
+# =====================================================================
+# PR #15 CANONICAL LOG METADATA & REVISION TRACKING
+# =====================================================================
+
+class SourceMetadata(ContractModel):
+    format: EventLogFormat
+    canonical_schema_version: str = Field(default="0.1.0", description="Canonical schema from PR #15")
+    mapping_contract_version: str = Field(default="0.1.0", description="Mapping specification version")
+    mapping_revision_id: str | None = Field(default=None, description="Traceable confirmed mapping reference")
+    input_sha256: str = Field(pattern=r"^[a-fA-F0-9]{64}$", description="SHA-256 integrity hash")
+    time_semantics: TimeSemantics
+    source_log_version: str | None = None
 
 
 class AIInterpretationType(str, Enum):
@@ -163,6 +176,7 @@ class AIInterpretationType(str, Enum):
 
 class AIInterpretation(ContractModel):
     interpretation_id: str = Field(min_length=1)
+    target_ref: str | None = Field(default=None, description="Target candidate or metric ID interpreted")
     type: AIInterpretationType
     text: str = Field(min_length=1)
     evidence_refs: list[str] = Field(default_factory=list)
@@ -173,7 +187,7 @@ class AIInterpretation(ContractModel):
 
 
 class DatasetLimitation(ContractModel):
-    code: str = Field(min_length=1, description="Stable limitation identifier")
+    code: str = Field(min_length=1, description="Limitation identifier (e.g., LIM-NO-START-TIMESTAMP)")
     description: str = Field(min_length=1)
     affected_capabilities: list[str] = Field(default_factory=list)
 
@@ -192,11 +206,17 @@ class SimulationScenarioResult(ContractModel):
     limitations: list[str] = Field(default_factory=list)
 
 
+class PublicationState(str, Enum):
+    INTERNAL_DRAFT = "internal_draft"
+    APPROVED_FOR_PUBLICATION = "approved_for_publication"
+    PUBLISHED = "published"
+
+
 class AnalysisResultPayload(ContractModel):
     schema_version: Literal["0.2.0"] = "0.2.0"
     analysis_id: str = Field(min_length=1)
     timestamp: datetime
-    status: AnalysisStatus
+    publication_state: PublicationState = Field(default=PublicationState.INTERNAL_DRAFT)
     source: SourceMetadata
     capabilities: CapabilityReport
     kpis: list[ProcessKPI] = Field(default_factory=list)
@@ -220,11 +240,23 @@ class ApprovalResponse(ContractModel):
     candidate_id: str
     countermeasure_id: str
     status: Literal["approved"]
-    approver_id: str = Field(
-        description="Must be populated from the authenticated user context, never trusted from client input"
-    )
+    approver_id: str = Field(description="Derived from authenticated user context")
     approval_timestamp: datetime
     supervisor_notes: str | None = None
+
+
+class PublishRequest(ContractModel):
+    analysis_id: str = Field(min_length=1)
+    authorized_consumers: list[str] = Field(default_factory=lambda: ["P06", "P20", "P17"])
+    authorization_token: str = Field(min_length=1)
+
+
+class PublishResponse(ContractModel):
+    publication_id: str
+    analysis_id: str
+    status: Literal["published"]
+    published_at: datetime
+    consumers: list[str]
 
 
 class ErrorDetail(ContractModel):

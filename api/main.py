@@ -17,11 +17,11 @@ from .schemas import (
     ErrorDetail,
     ErrorResponse,
     ProcessKPI,
+    PublishRequest,
+    PublishResponse,
 )
 
-
 API_PREFIX = "/api/v1"
-# Proposal for the initial scaffold; confirm this limit with the project requirements.
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 ALLOWED_EXTENSIONS = {".csv", ".xes"}
 
@@ -29,12 +29,11 @@ logger = logging.getLogger("p05_api")
 
 app = FastAPI(
     title="P05 — Bottleneck Detection in Processes API",
-    description="API for P05 — Bottleneck Detection in Processes",
+    description="API for P05 — Bottleneck Detection in Processes | AI Puzzle Framework",
     version="0.2.0",
-    )
+)
 
 app.openapi_version = "3.1.0"
-
 
 
 class APIError(Exception):
@@ -50,7 +49,6 @@ async def api_error_handler(_: Request, exc: APIError) -> JSONResponse:
 
 @app.exception_handler(RequestValidationError)
 async def request_validation_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
-    # Do not echo rejected input values: event logs may contain confidential operational data.
     details = []
     for error in exc.errors():
         location = ".".join(str(part) for part in error.get("loc", ()) if part not in {"body", "query", "path"})
@@ -83,30 +81,47 @@ async def http_error_handler(_: Request, exc: StarletteHTTPException) -> JSONRes
 
 ERROR_RESPONSES: dict[int, dict[str, Any]] = {
     404: {"model": ErrorResponse, "description": "Analysis or requested resource not found"},
-    409: {"model": ErrorResponse, "description": "Operation conflicts with the current resource state"},
-    413: {"model": ErrorResponse, "description": "Uploaded file exceeds the configured size limit"},
+    409: {"model": ErrorResponse, "description": "Operation conflicts with current resource state"},
+    413: {"model": ErrorResponse, "description": "Uploaded file exceeds configured size limit"},
     415: {"model": ErrorResponse, "description": "Unsupported event-log format"},
     422: {"model": ErrorResponse, "description": "Request validation error"},
     500: {"model": ErrorResponse, "description": "Unexpected internal error"},
-    501: {"model": ErrorResponse, "description": "The corresponding application service is not implemented yet"},
+    501: {"model": ErrorResponse, "description": "Application service is not implemented yet"},
 }
 
+
+# --- DATASET OPERATIONS (AL-03, PR #15) ---
+
+@app.post(
+    f"{API_PREFIX}/datasets/upload",
+    operation_id="upload_dataset",
+    summary="Upload dataset and generate structural profile",
+    responses={413: ERROR_RESPONSES[413], 415: ERROR_RESPONSES[415], 422: ERROR_RESPONSES[422], 501: ERROR_RESPONSES[501]},
+    tags=["Dataset Ingestion"],
+)
+async def upload_dataset(
+    file: UploadFile = File(..., description="Event log in CSV or XES format")
+) -> Any:
+    suffix = Path(file.filename or "").suffix.lower()
+    if suffix not in ALLOWED_EXTENSIONS:
+        raise APIError(415, "UNSUPPORTED_LOG_FORMAT", "Only .csv and .xes event logs are accepted.")
+    content = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise APIError(413, "FILE_TOO_LARGE", f"The upload exceeds the {MAX_UPLOAD_BYTES}-byte limit.")
+    if not content:
+        raise APIError(422, "EMPTY_FILE", "The uploaded event log is empty.")
+
+    raise APIError(501, "DATASET_SERVICE_NOT_IMPLEMENTED", "Staged dataset profiling service pending integration.")
+
+
+# --- CORE ANALYSIS EXECUTION ---
 
 @app.post(
     f"{API_PREFIX}/analyses",
     response_model=AnalysisResultPayload,
+    operation_id="create_analysis",
     summary="Create an analysis",
-    description=(
-        "Accepts a CSV or XES event log. The contract scaffold validates basic upload constraints. "
-        "Actual ingestion, PM4Py analysis and result persistence are not implemented in this file."
-    ),
-    responses={
-        413: ERROR_RESPONSES[413],
-        415: ERROR_RESPONSES[415],
-        422: ERROR_RESPONSES[422],
-        500: ERROR_RESPONSES[500],
-        501: ERROR_RESPONSES[501],
-    },
+    responses={413: ERROR_RESPONSES[413], 415: ERROR_RESPONSES[415], 422: ERROR_RESPONSES[422], 500: ERROR_RESPONSES[500], 501: ERROR_RESPONSES[501]},
     tags=["Analysis ingestion and processing"],
 )
 async def create_analysis(
@@ -125,7 +140,6 @@ async def create_analysis(
     if not content:
         raise APIError(422, "EMPTY_FILE", "The uploaded event log is empty.")
 
-    # Keep variables explicit: the future ingestion service must consume these mappings.
     _ = (case_id_col, activity_col, timestamp_col, file.filename, content)
     raise APIError(
         501,
@@ -134,9 +148,12 @@ async def create_analysis(
     )
 
 
+# --- INTEROPERABILITY & RESULTS (AL-05, AL-06, AL-07, PR #16) ---
+
 @app.get(
     f"{API_PREFIX}/analyses/{{analysis_id}}/bottlenecks",
     response_model=list[CandidateBottleneck],
+    operation_id="get_candidate_bottlenecks",
     summary="Get candidate bottlenecks",
     responses={404: ERROR_RESPONSES[404], 422: ERROR_RESPONSES[422], 500: ERROR_RESPONSES[500], 501: ERROR_RESPONSES[501]},
     tags=["Interoperability P06 / P20"],
@@ -149,6 +166,7 @@ async def get_bottlenecks(analysis_id: str) -> list[CandidateBottleneck]:
 @app.get(
     f"{API_PREFIX}/analyses/{{analysis_id}}/kpis",
     response_model=list[ProcessKPI],
+    operation_id="get_process_kpis",
     summary="Get process KPIs",
     responses={404: ERROR_RESPONSES[404], 422: ERROR_RESPONSES[422], 500: ERROR_RESPONSES[500], 501: ERROR_RESPONSES[501]},
     tags=["Interoperability P17"],
@@ -161,6 +179,7 @@ async def get_process_kpis(analysis_id: str) -> list[ProcessKPI]:
 @app.get(
     f"{API_PREFIX}/analyses/{{analysis_id}}/full-report",
     response_model=AnalysisResultPayload,
+    operation_id="get_full_analysis_report",
     summary="Get the full analysis report",
     responses={404: ERROR_RESPONSES[404], 422: ERROR_RESPONSES[422], 500: ERROR_RESPONSES[500], 501: ERROR_RESPONSES[501]},
     tags=["Full analysis result"],
@@ -170,15 +189,13 @@ async def get_full_analysis(analysis_id: str) -> AnalysisResultPayload:
     raise APIError(501, "ANALYSIS_REPOSITORY_NOT_IMPLEMENTED", "Analysis result retrieval is not implemented yet.")
 
 
+# --- GOVERNANCE & EXTERNAL PUBLICATION (AL-12) ---
+
 @app.post(
     f"{API_PREFIX}/analyses/{{analysis_id}}/countermeasures/approve",
     response_model=ApprovalResponse,
-    summary="Approve a countermeasure",
-    description=(
-        "Human approval contract. A real implementation must authenticate the supervisor, "
-        "derive approver_id from the trusted security context and persist an audit record. "
-        "Approval must not imply that the countermeasure has been executed."
-    ),
+    operation_id="approve_countermeasure",
+    summary="Approve a countermeasure (Human Gate)",
     responses={404: ERROR_RESPONSES[404], 409: ERROR_RESPONSES[409], 422: ERROR_RESPONSES[422], 500: ERROR_RESPONSES[500], 501: ERROR_RESPONSES[501]},
     tags=["Human oversight"],
 )
@@ -191,11 +208,28 @@ async def approve_countermeasure(analysis_id: str, request: ApprovalRequest) -> 
     )
 
 
+@app.post(
+    f"{API_PREFIX}/analyses/{{analysis_id}}/publish",
+    response_model=PublishResponse,
+    operation_id="publish_analysis_results",
+    summary="Authorize and publish findings to external puzzle peers",
+    responses={404: ERROR_RESPONSES[404], 409: ERROR_RESPONSES[409], 422: ERROR_RESPONSES[422], 500: ERROR_RESPONSES[500], 501: ERROR_RESPONSES[501]},
+    tags=["External Publication"],
+)
+async def publish_results(analysis_id: str, request: PublishRequest) -> PublishResponse:
+    _ = (analysis_id, request)
+    raise APIError(
+        501,
+        "PUBLICATION_SERVICE_NOT_IMPLEMENTED",
+        "External publication requires human confirmation gate and partner agreement.",
+    )
+
+
 @app.get(
     f"{API_PREFIX}/analyses/{{analysis_id}}/export-bpmn",
     response_class=Response,
+    operation_id="export_bpmn_xml",
     summary="Export the discovered process as BPMN XML",
-    description="Returns BPMN 2.0 XML when the discovery and export services are implemented.",
     responses={
         200: {
             "description": "BPMN 2.0 XML document",
@@ -213,6 +247,6 @@ async def export_bpmn(analysis_id: str) -> Response:
     raise APIError(501, "BPMN_EXPORT_NOT_IMPLEMENTED", "BPMN discovery/export is not implemented yet.")
 
 
-@app.get("/health", tags=["Technical"])
+@app.get("/health", operation_id="get_health_status", tags=["Technical"])
 async def health() -> dict[str, str]:
     return {"status": "ok", "component": "p05-contract-scaffold"}
