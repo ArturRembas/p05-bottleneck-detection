@@ -11,11 +11,11 @@ This repository supports collaborative academic development by the three P05 tea
 
 ## Branching and review
 
-Update `main`, then create a short-lived branch:
+Update `master`, then create a short-lived branch:
 
 ```bash
-git switch main
-git pull --ff-only origin main
+git switch master
+git pull --ff-only origin master
 git switch -c feat/log-validation
 ```
 
@@ -23,13 +23,13 @@ Use `feat/`, `fix/`, `docs/`, `test/` or `chore/` prefixes. Keep commits focused
 
 Before opening a Pull Request:
 
-- Run relevant local tests and document their commands/results.
+- Use the shared Docker/Compose environment for applicable tests and document commands/results. For documentation-only changes, verify links, commands and consistency; justify why application tests are not applicable. See `docs/DOCKER_DEVELOPMENT.md`.
 - Check that no mock KPI is presented as computed from data.
 - Add or update schemas, examples and documentation when interfaces change.
 - Keep deterministic metrics, AI interpretations and simulation estimates distinguishable.
 - Check that secrets or disallowed source datasets were not staged (`git diff --cached`).
 
-Open a PR against `main`, link the Issue (e.g. `Closes #123` only if the change actually satisfies the Issue's criteria), and request review from another group member. The author should not self-approve substantive behavior changes.
+Open a PR against `master`, link the Issue (e.g. `Closes #123` only if the change actually satisfies the Issue's criteria), and request review from another group member. The author should not self-approve substantive behavior changes.
 
 ## Definition of Done (proposed, pending group review)
 
@@ -46,7 +46,7 @@ A use-case Issue remains open until the **end-to-end behavior** and its acceptan
 
 ## Data-handling conventions
 
-Use only synthetic or distributable fixtures inside `examples/` and `data/synthetic/`. Keep raw/private logs and derived sensitive data outside Git and respect `.gitignore`. Store configuration examples in `.env.example`, never real secrets. Do not commit LLM prompts containing private industrial data.
+Use only synthetic or distributable fixtures inside `examples/` and `data/synthetic/`. Keep raw/private logs and derived sensitive data outside Git and respect `.gitignore`. Store configuration examples in `.env.example` or `.env.docker.example`, never real secrets. Local private data and generated research runs belong under ignored directories such as `.local/`. Do not commit LLM prompts containing private industrial data.
 
 ## Communication and decisions
 

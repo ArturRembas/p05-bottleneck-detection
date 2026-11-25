@@ -9,10 +9,10 @@
 
 ## Repository practices
 
-- `main`: reviewed shared integration branch.
+- `master`: reviewed shared integration branch.
 - Changes: short-lived `feat/*`, `fix/*`, `docs/*`, `test/*`, `chore/*` branches.
 - Every PR: link Issues, describe the change, show test evidence and state known limitations.
-- Avoid force-pushing to `main`, secrets, private data and unreviewed changes.
+- Avoid force-pushing to `master`, secrets, private data and unreviewed changes.
 - Prefer peer reviews even when branch protection is not available on the GitHub plan.
 
 ## Board configuration
@@ -25,6 +25,6 @@ Create GitHub Project **P05 — Development & Roadmap** with statuses `Backlog`,
 - `spec:needs-review`: unresolved or awaiting group agreement.
 - `spec:approved`: evidence of formal group approval, with Decision ID.
 - A merged PR is not evidence that the end-to-end use case is fully implemented.
-- Mark `Done` only after acceptance criteria and tests are verified.
+- Mark `Done` only after acceptance criteria and applicable verification are satisfied, peer review is recorded, and the related Issue is closed. A documentation-only task may use documented checks instead of application tests. Check the Project item status after Issue closure; update it manually if automation does not do so.
 
 See `docs/USE_CASE_CATALOG.md` and `docs/MILESTONES.md` for scope and targets.
