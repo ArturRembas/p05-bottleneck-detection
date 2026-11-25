@@ -23,8 +23,8 @@ st.markdown("---")
 # =====================================================================
 st.sidebar.markdown("#### Ingestion & Schema Mapping")
 uploaded_file = st.sidebar.file_uploader(
-    "Source Event Log (CSV or XES format)",
-    type=["csv", "xes"],
+    "Source Event Log (CSV format)",
+    type=["csv"],
     help="Upload an execution log. Maximum accepted size: 50 MB."
 )
 
@@ -103,38 +103,83 @@ with tab_governance:
     with col_kpi:
         st.markdown("##### Detected Candidate Bottlenecks")
 
-        # Chiamata REST GET /bottlenecks
-        bottleneck_target = "CNC_Milling"
-        try:
-            res = requests.get(f"{API_PREFIX}/analyses/run-demo-001/bottlenecks", timeout=2)
-            if res.status_code == 200:
-                b_list = res.json()
-                if b_list:
-                    top_b = b_list[0]
-                    bottleneck_target = top_b["activity"]
-                    st.metric(
-                        label=f"Rank #1 Hotspot: {top_b['activity']}",
-                        value=f"{top_b['waiting_time_hours']} hrs",
-                        delta=f"Severity: {top_b['severity']}",
-                        delta_color="inverse"
+        # Retrieve bottlenecks only for a real analysis
+        analysis_payload = st.session_state.get("analysis_payload")
+        analysis_id = (
+            analysis_payload.get("analysis_id")
+            if analysis_payload
+            else None
+        )
+
+        bottleneck_target = "Not available"
+
+        if analysis_id:
+            try:
+                res = requests.get(
+                    f"{API_PREFIX}/analyses/{analysis_id}/bottlenecks",
+                    timeout=5
+                )
+
+                if res.status_code == 200:
+                    b_list = res.json()
+
+                    if b_list:
+                        top_b = b_list[0]
+                        bottleneck_target = top_b["target"]["target_name"]
+
+                        waiting_time = top_b.get("waiting_time_hours")
+                        metric_value = (
+                            f"{waiting_time:.2f} hrs"
+                            if waiting_time is not None
+                            else "Unavailable"
+                        )
+
+                        st.metric(
+                            label=f"Rank #{top_b['rank']} Hotspot: {bottleneck_target}",
+                            value=metric_value,
+                            delta=f"Severity: {top_b.get('severity') or 'Not classified'}",
+                            delta_color="inverse"
+                        )
+                    else:
+                        st.info("No bottleneck candidates found.")
+
+                elif res.status_code == 501:
+                    st.caption(
+                        "Backend scaffold active: bottleneck retrieval not implemented yet."
                     )
-            elif res.status_code == 501:
-                st.caption("Backend notice: GET /bottlenecks contract scaffold active (HTTP 501).")
-        except Exception:
-            pass
+                else:
+                    st.warning(f"Unable to retrieve bottlenecks: HTTP {res.status_code}")
+
+            except requests.exceptions.RequestException as e:
+                st.warning(f"Backend connection error: {e}")
+
+        else:
+            st.info("Upload an event log and execute an analysis to view bottlenecks.")
 
         st.markdown("""
-        **Operational Context:**
-        - Observed Metric: Mean transition gap
-        - Epistemic Reliability: `derived` (Completion-only timestamps)
-        - Traceable Reference: `evidence_refs: ['kpi-001']`
+        **Operational Context (Illustrative):**
+        - Observed Metric: Mean transition gap (not yet computed)
+        - Epistemic Reliability: not yet available
+        - Evidence Reference: Demonstration placeholder — no verified evidence linked.
         """)
 
     with col_action:
         st.markdown("##### Human Oversight Gate (HITL)")
         st.markdown(f"**Target Station:** `{bottleneck_target}`")
-        st.markdown("**Proposed Countermeasure:** Reallocate +1 operator during evening shift changeovers.")
-        st.caption("Simulation model estimate (SimPy): -22% queue length under steady-state assumptions.")
+        st.info(
+            "Demonstration mode: no operational countermeasure "
+            "is currently available."
+        )
+
+        st.markdown(
+            "**Illustrative Proposed Countermeasure:** "
+            "Reallocate +1 operator during evening shift changeovers."
+        )
+
+        st.caption(
+            "Illustrative estimate only — simulation not executed. "
+            "The displayed -22% queue reduction is not a verified result."
+        )
 
         supervisor_notes = st.text_area(
             "Review Notes & Decision Log",
@@ -142,27 +187,17 @@ with tab_governance:
             height=100
         )
 
-        if st.button("Confirm & Authorize External Publication", use_container_width=True):
-            approval_body = {
-                "candidate_id": "cand-01",
-                "countermeasure_id": "cm-01",
-                "workstation": bottleneck_target,
-                "action": "Add resource",
-                "supervisor_notes": supervisor_notes or "Authorized via supervisor UI"
-            }
-            try:
-                r = requests.post(
-                    f"{API_PREFIX}/analyses/run-demo-001/countermeasures/approve",
-                    json=approval_body,
-                    timeout=5
-                )
-                if r.status_code in (200, 201):
-                    st.success("Decision recorded. Published to downstream consumers (P06/P20).")
-                elif r.status_code == 501:
-                    st.info("HTTP 501: Approval request validated. Durable audit trail integration pending.")
-            except Exception as e:
-                st.error(f"Dispatch failure: {e}")
+        st.button(
+            "Approve Countermeasure",
+            disabled=True,
+            use_container_width=True,
+            help="Approval is disabled until a real candidate and countermeasure are available."
+        )
 
+        st.caption(
+            "Countermeasure approval and external publication are separate operations. "
+            "Neither operation is currently enabled in this frontend."
+        )
 with tab_assistant:
     st.markdown("##### Supervisor Copilot & Operational Knowledge")
     st.caption("Domain-specific assistance grounded on process documentation and validated run evidence.")
@@ -170,9 +205,15 @@ with tab_assistant:
     user_query = st.text_input("Submit query to knowledge base", placeholder="e.g., Explain observed variance between Cutting and Milling...")
 
     if user_query:
-        st.markdown("**System Response:**")
+        st.info(
+            "Demonstration mode: this is an illustrative placeholder, "
+            "not an AI-generated analysis."
+        )
+
+        st.markdown("**Illustrative System Response:**")
+
         st.container(border=True).markdown(
             f"*Query received:* `{user_query}`\n\n"
-            "According to the ingested log characteristics and machine manuals, "
-            "inter-event delays preceding Milling correlate primarily with batch staging rather than machine mechanical downtime."
+            "This is a demonstration response. No actual event-log analysis, "
+            "document retrieval, or AI inference has been performed."
         )
