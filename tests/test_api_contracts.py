@@ -77,6 +77,20 @@ def test_pr16_detector_alignment_and_evidence_categories():
         rank=1,
         observations_count=12,
         distinct_cases_count=4,  # Rispetta il min-support >= 3
+        observation_coverage={
+            "eligible_count": 12,
+            "total_count": 12,
+            "ratio": 1.0,
+            "coverage_class": "full",
+        },
+        ranking_group={
+            "group_id": "gap-full",
+            "metric": "observed_transition_gap",
+            "target_type": "transition",
+            "analytical_view_ref": "completion-view",
+            "observation_window_ref": "full-log",
+            "coverage_class": "full",
+        },
         case_coverage_ratio=0.80,
         severity=None            # Non forzata se non supportata
     )
@@ -223,6 +237,18 @@ def test_ranking_support_validation(n, c, rank, status, valid):
         "ranking_status": status,
         "observations_count": n,
         "distinct_cases_count": c,
+        "observation_coverage": {
+            "eligible_count": n,
+            "coverage_class": "unknown",
+        },
+        "ranking_group": {
+            "group_id": "gap-unknown",
+            "metric": "observed_transition_gap",
+            "target_type": "transition",
+            "analytical_view_ref": "completion-view",
+            "observation_window_ref": "full-log",
+            "coverage_class": "unknown",
+        } if status == "ranked" else None,
         "case_coverage_ratio": 0.0 if n == 0 else 0.5,
         "support_policy": {
             "policy_version": "0.1.0",
@@ -252,6 +278,18 @@ def test_configurable_support_threshold():
         "ranking_status": "ranked",
         "observations_count": 3,
         "distinct_cases_count": 3,
+        "observation_coverage": {
+            "eligible_count": 3,
+            "coverage_class": "unknown",
+        },
+        "ranking_group": {
+            "group_id": "gap-unknown",
+            "metric": "observed_transition_gap",
+            "target_type": "transition",
+            "analytical_view_ref": "completion-view",
+            "observation_window_ref": "full-log",
+            "coverage_class": "unknown",
+        },
         "case_coverage_ratio": 0.75,
         "support_policy": {
             "policy_version": "0.1.0-test",
@@ -264,7 +302,103 @@ def test_configurable_support_threshold():
         CandidateBottleneck(**payload)
 
     payload["observations_count"] = 5
+    payload["observation_coverage"]["eligible_count"] = 5
     payload["distinct_cases_count"] = 4
 
     candidate = CandidateBottleneck(**payload)
     assert candidate.rank == 1
+
+
+@pytest.mark.parametrize(
+    "eligible,total,ratio,coverage_class,valid",
+    [
+        (10, 10, 1.0, "full", True),
+        (5, 10, 0.5, "partial", True),
+        (0, 10, 0.0, "partial", True),
+        (5, None, None, "unknown", True),
+        (0, 0, None, "unknown", True),
+        (11, 10, 1.0, "full", False),
+        (5, 10, 0.8, "partial", False),
+        (5, 10, 0.5, "full", False),
+        (10, 10, 1.0, "partial", False),
+        (5, None, 0.5, "unknown", False),
+        (5, None, None, "full", False),
+        (5, 10, None, "partial", False),
+        (1, 0, None, "unknown", False),
+    ],
+)
+def test_observation_coverage(
+    eligible, total, ratio, coverage_class, valid
+):
+    from api.schemas import ObservationCoverage
+
+    payload = {
+        "eligible_count": eligible,
+        "total_count": total,
+        "ratio": ratio,
+        "coverage_class": coverage_class,
+    }
+
+    if valid:
+        coverage = ObservationCoverage(**payload)
+        assert coverage.eligible_count == eligible
+    else:
+        with pytest.raises(ValidationError):
+            ObservationCoverage(**payload)
+
+
+@pytest.mark.parametrize(
+    "issue",
+    [
+        "missing_group",
+        "wrong_target_type",
+        "wrong_coverage_class",
+        "inconsistent_eligible_count",
+    ],
+)
+def test_invalid_ranking_group(issue):
+    payload = {
+        "candidate_id": "group-test",
+        "target": {
+            "target_type": "transition",
+            "target_name": "Welding",
+            "source_activity": "Cutting",
+        },
+        "evidence_category": "L1_delay_hotspot",
+        "ranking_status": "ranked",
+        "rank": 1,
+        "observations_count": 4,
+        "distinct_cases_count": 4,
+        "support_policy": {
+            "policy_version": "0.1.0",
+        },
+        "observation_coverage": {
+            "eligible_count": 4,
+            "total_count": 8,
+            "ratio": 0.5,
+            "coverage_class": "partial",
+        },
+        "ranking_group": {
+            "group_id": "gap-partial",
+            "metric": "observed_transition_gap",
+            "target_type": "transition",
+            "analytical_view_ref": "completion-view",
+            "observation_window_ref": "full-log",
+            "coverage_class": "partial",
+        },
+    }
+
+    # Verify that the original payload is valid.
+    CandidateBottleneck(**payload)
+
+    if issue == "missing_group":
+        payload["ranking_group"] = None
+    elif issue == "wrong_target_type":
+        payload["ranking_group"]["target_type"] = "activity"
+    elif issue == "wrong_coverage_class":
+        payload["ranking_group"]["coverage_class"] = "full"
+    elif issue == "inconsistent_eligible_count":
+        payload["observations_count"] = 5
+
+    with pytest.raises(ValidationError):
+        CandidateBottleneck(**payload)

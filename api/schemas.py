@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
+from math import isclose
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -198,6 +199,72 @@ class SupportPolicy(ContractModel):
     min_distinct_cases: int = Field(ge=1, default=3)
 
 
+class CoverageClass(str, Enum):
+    FULL = "full"
+    PARTIAL = "partial"
+    UNKNOWN = "unknown"
+
+
+class ObservationCoverage(ContractModel):
+    eligible_count: int = Field(ge=0)
+    total_count: int | None = Field(default=None, ge=0)
+    ratio: float | None = Field(default=None, ge=0, le=1)
+    coverage_class: CoverageClass
+
+    @model_validator(mode="after")
+    def validate_coverage(self) -> "ObservationCoverage":
+        if self.total_count is None or self.total_count == 0:
+            if self.total_count == 0 and self.eligible_count != 0:
+                raise ValueError(
+                    "Eligible count cannot exceed total count"
+                )
+            if self.ratio is not None:
+                raise ValueError(
+                    "Coverage ratio requires a positive denominator"
+                )
+            if self.coverage_class != CoverageClass.UNKNOWN:
+                raise ValueError(
+                    "Undefined coverage must be classified as unknown"
+                )
+            return self
+
+        if self.eligible_count > self.total_count:
+            raise ValueError(
+                "Eligible count cannot exceed total count"
+            )
+
+        expected = self.eligible_count / self.total_count
+
+        if self.ratio is None or not isclose(
+            self.ratio, expected, rel_tol=1e-9, abs_tol=1e-12
+        ):
+            raise ValueError(
+                "Coverage ratio must equal eligible_count / total_count"
+            )
+
+        expected_class = (
+            CoverageClass.FULL
+            if self.eligible_count == self.total_count
+            else CoverageClass.PARTIAL
+        )
+
+        if self.coverage_class != expected_class:
+            raise ValueError(
+                "Coverage class is inconsistent with observation counts"
+            )
+
+        return self
+
+
+class RankingGroup(ContractModel):
+    group_id: str = Field(min_length=1)
+    metric: str = Field(min_length=1)
+    target_type: TargetType
+    analytical_view_ref: str = Field(min_length=1)
+    observation_window_ref: str = Field(min_length=1)
+    coverage_class: CoverageClass
+
+
 class CandidateBottleneck(ContractModel):
     candidate_id: str = Field(min_length=1)
     target: BottleneckTarget = Field(..., description="Target activity, transition or workstation (AL-06)")
@@ -209,12 +276,18 @@ class CandidateBottleneck(ContractModel):
         description="Rank within a comparable group, when supported",
     )
     support_policy: SupportPolicy
-    ranking_group: int | None = Field(default=1, description="Priority cluster (AL-07)")
+    ranking_group: RankingGroup | None = None
 
     # Parametri di supporto minimo di PR #16 (almeno 3 osservazioni su 3 casi)
     observations_count: int = Field(ge=0, description="Total valid observations (min support: 3)")
     distinct_cases_count: int = Field(ge=0, description="Distinct cases affected (min support: 3)")
-    case_coverage_ratio: float = Field(ge=0.0, le=1.0, description="Ratio of cases affected")
+    observation_coverage: ObservationCoverage
+    case_coverage_ratio: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Affected-case ratio when independently established",
+    )
 
     # Severità opzionale: non forzata se i dati non la supportano (PR #16)
     severity: BottleneckSeverity | None = Field(default=None, description="Optional severity classification")
@@ -228,6 +301,30 @@ class CandidateBottleneck(ContractModel):
     def validate_ranking_support(self) -> "CandidateBottleneck":
         n = self.observations_count
         c = self.distinct_cases_count
+
+        if self.observation_coverage.eligible_count != n:
+            raise ValueError(
+                "Coverage eligible_count must match observations_count"
+            )
+
+        if self.ranking_status == RankingStatus.RANKED:
+            if self.ranking_group is None:
+                raise ValueError(
+                    "Ranked findings require a ranking group"
+                )
+
+        if self.ranking_group is not None:
+            if self.ranking_group.target_type != self.target.target_type:
+                raise ValueError(
+                    "Ranking group target type must match finding target"
+                )
+            if (
+                self.ranking_group.coverage_class
+                != self.observation_coverage.coverage_class
+            ):
+                raise ValueError(
+                    "Ranking group coverage class must match finding coverage"
+                )
 
         if c > n:
             raise ValueError(
