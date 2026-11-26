@@ -1,0 +1,3 @@
+event_id,case_id,activity,timestamp
+E01,P001,Cutting,2026-10-01T08:00:00Z
+E01,P001,Welding,2026-10-01T09:00:00Z

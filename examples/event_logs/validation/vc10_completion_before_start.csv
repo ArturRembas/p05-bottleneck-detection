@@ -1,0 +1,2 @@
+case_id,activity,timestamp,activity_instance_id,resource_id,start_timestamp,queue_entry
+P001,Welding,2026-10-01T09:00:00Z,W01,Welder-1,2026-10-01T09:15:00Z,2026-10-01T08:50:00Z

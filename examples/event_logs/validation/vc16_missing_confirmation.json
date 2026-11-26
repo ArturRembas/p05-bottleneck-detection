@@ -1,0 +1,44 @@
+{
+  "schema_version": "0.1.0",
+  "mapping_id": "mapping-example-001",
+  "mapping_version": 1,
+  "input_sha256": "f172179f3be3ea4fbdcef30731a524bd86c2105cf3d8345eb51c61e4fe5bf633",
+  "source_format": "csv",
+  "case_notion": "production order",
+  "field_mapping": {
+    "case_id": {
+      "scope": "csv_column",
+      "name": "Order_ID"
+    },
+    "activity": {
+      "scope": "csv_column",
+      "name": "Operation"
+    },
+    "timestamp": {
+      "scope": "csv_column",
+      "name": "Recorded_At"
+    }
+  },
+  "timestamp_semantics": "completion",
+  "source_timezone": null,
+  "transformations": {
+    "csv": {
+      "encoding": "utf-8",
+      "delimiter": ",",
+      "quotechar": "\"",
+      "header": true
+    },
+    "timestamp_format": "iso8601",
+    "identifier_policy": "preserve_string",
+    "null_policy": "empty_or_blank",
+    "ordering": "timestamp_then_source_event_index"
+  },
+  "approval": {
+    "status": "confirmed",
+    "mapping_id": "mapping-example-001",
+    "mapping_version": 1,
+    "input_sha256": "f172179f3be3ea4fbdcef30731a524bd86c2105cf3d8345eb51c61e4fe5bf633",
+    "confirmed_at": "2026-11-24T15:00:00Z",
+    "approval_ref": "synthetic-approval-001"
+  }
+}

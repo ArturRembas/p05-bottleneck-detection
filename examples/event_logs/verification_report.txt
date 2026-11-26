@@ -1,0 +1,35 @@
+Python 3.13.5 | jsonschema 4.26.0
+Scope: structural validation and independent synthetic fixture oracles only.
+PASS metaschema: canonical_event_log.schema.json
+PASS metaschema: event_log_mapping.schema.json
+PASS structural expectation (accept): canonical_log.json
+PASS structural expectation (accept): confirmed_mapping.example.json
+PASS structural expectation (accept): xes_mapping.example.json
+PASS structural expectation (reject): validation/vc04_wrong_trace_scope.json
+PASS structural expectation (reject): validation/vc05_missing_activity.json
+PASS structural expectation (reject): validation/vc05_empty_events.json
+PASS structural expectation (reject): validation/vc05_missing_mapping.json
+PASS structural expectation (reject): validation/vc06_case_id.json
+PASS structural expectation (reject): validation/vc06_activity.json
+PASS structural expectation (reject): validation/vc06_timestamp.json
+PASS structural expectation (reject): validation/vc08_noncanonical_offset.json
+PASS structural expectation (accept): validation/vc12_cross_record_duplicate_id.json
+PASS structural expectation (accept): validation/vc16_proposed.json
+PASS structural expectation (accept): validation/vc16_rejected.json
+PASS structural expectation (accept): validation/vc16_stale_revision.json
+PASS structural expectation (accept): validation/vc16_wrong_hash.json
+PASS structural expectation (reject): validation/vc16_missing_confirmation.json
+PASS structural expectation (accept): validation/vc17_optional_nulls.json
+PASS structural expectation (reject): validation/vc17_missing_generated_index.json
+PASS structural expectation (reject): validation/vc18_unsupported_format.json
+PASS 20 catalogue entries and fixture references; 20 structural expectations.
+PASS VC-17 source checksum, illustrative mapping references, UTC and identity preservation (not trusted approval).
+PASS VC-01 completion-only arithmetic and expected adjacent edges.
+PASS VC-02 elapsed service and queue wait arithmetic.
+PASS VC-03 known paired lifecycle fixture (not a pairing algorithm).
+PASS VC-04 XML structure, trace scope, source checksum and offset arithmetic (not XES conformance).
+PASS VC-08 equal UTC instants.
+PASS VC-19 observed equal endpoints yield zero.
+PASS VC-20 expected within-case intervals only.
+PASS VC-16 fixtures contain mismatched references despite structural acceptance; runtime gate remains unimplemented.
+SUCCESS — design artifact checks only. Remaining VC outcomes require future implementation tests.

@@ -1,0 +1,4 @@
+case_id,activity,timestamp,activity_instance_id,lifecycle
+P001,Welding,2026-10-01T08:50:00Z,W01,queue_entry
+P001,Welding,2026-10-01T09:00:00Z,W01,start
+P001,Welding,2026-10-01T09:15:00Z,W01,complete

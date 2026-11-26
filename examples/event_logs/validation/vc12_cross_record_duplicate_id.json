@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "schema_version": "0.1.0",
+    "input_sha256": "f172179f3be3ea4fbdcef30731a524bd86c2105cf3d8345eb51c61e4fe5bf633",
+    "source_format": "csv",
+    "case_notion": "production order",
+    "mapping_id": "mapping-example-001",
+    "mapping_version": 1,
+    "timestamp_semantics": "completion",
+    "source_timezone": null,
+    "normalized_timezone": "UTC",
+    "quality_report_ref": "synthetic-quality-001"
+  },
+  "events": [
+    {
+      "case_id": "0007",
+      "activity": "Cutting",
+      "timestamp": "2026-10-01T08:00:00Z",
+      "source_event_index": 0,
+      "event_id": "E01"
+    },
+    {
+      "case_id": "0007",
+      "activity": "Welding",
+      "timestamp": "2026-10-01T08:00:00Z",
+      "source_event_index": 1,
+      "event_id": "E01"
+    }
+  ]
+}

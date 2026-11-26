@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1.0",
+  "mapping_id": "mapping-xes-example-001",
+  "mapping_version": 1,
+  "input_sha256": "0d5dc5f69c92ee41f71a4e8d202580853df7d9479cd94819c6adc812acf890c9",
+  "source_format": "xes",
+  "case_notion": "production order",
+  "field_mapping": {
+    "case_id": {
+      "scope": "xes_trace_attribute",
+      "name": "concept:name"
+    },
+    "activity": {
+      "scope": "xes_event_attribute",
+      "name": "concept:name"
+    },
+    "timestamp": {
+      "scope": "xes_event_attribute",
+      "name": "time:timestamp"
+    },
+    "lifecycle": {
+      "scope": "xes_event_attribute",
+      "name": "lifecycle:transition"
+    }
+  },
+  "timestamp_semantics": "completion",
+  "source_timezone": null,
+  "transformations": {
+    "timestamp_format": "iso8601",
+    "identifier_policy": "preserve_string",
+    "null_policy": "empty_or_blank",
+    "ordering": "timestamp_then_source_event_index",
+    "lifecycle_mapping": {
+      "complete": "complete"
+    }
+  },
+  "approval": {
+    "status": "proposed"
+  }
+}
