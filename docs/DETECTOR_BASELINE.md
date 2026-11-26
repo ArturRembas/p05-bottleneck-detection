@@ -8,7 +8,7 @@
 | Work item | [TASK-05 — Issue #7](https://github.com/ArturRembas/p05-bottleneck-detection/issues/7) |
 | Milestone | M1 — Architecture & Design |
 | Reviewed integration baseline | `master`, `ba11a17fd5cf2c8e1c1f2ac39d4287c27186dc38` |
-| Input contract dependency | [TASK-03, PR #15](https://github.com/ArturRembas/p05-bottleneck-detection/pull/15), head `c1835ca10803c36f791db4502b7e9e7965dc3ad9` (draft) |
+| Input contract dependency | [Canonical Event-Log Schema and Mapping Contract v0.1.0](https://github.com/ArturRembas/p05-bottleneck-detection/blob/39083c3d095a1f62241c378239b745a13443ec28/docs/CANONICAL_EVENT_LOG.md), integrated into `master` through [PR #15](https://github.com/ArturRembas/p05-bottleneck-detection/pull/15), merge commit `39083c3d095a1f62241c378239b745a13443ec28`. |
 | External contract dependency | [TASK-04, PR #10](https://github.com/ArturRembas/p05-bottleneck-detection/pull/10) (under review) |
 
 ## 1. Purpose, status and boundaries
@@ -49,7 +49,7 @@ These local IDs are proposals, not approved decision-register entries. No existi
 
 ## 4. Input and analytical views
 
-Use a validated canonical log, exact confirmed mapping revision, analytical capability assessment and a declared view, as proposed in TASK-03. Required fields are `case_id`, `activity`, `timestamp`; optional queue and service endpoints and resource information are used only when their meaning and correlation are established. Preserve case boundaries and source references. Lifecycle observations must not be mistaken for distinct completed occurrences. Ties resolved only by source order must retain an ordering-ambiguity limitation. A homogeneous observation sequence may support a descriptive gap ranking; unknown timestamp meaning must not be relabeled as completion. Exclude semantically unusable observations from the affected metric with explicit counts/reasons, not from the source log silently.
+Use a validated canonical log, exact confirmed mapping revision, analytical capability assessment and a declared view, in accordance with the canonical event-log contract v0.1.0 integrated into `master` through TASK-03 (PR #15). Required fields are `case_id`, `activity`, `timestamp`; optional queue and service endpoints and resource information are used only when their meaning and correlation are established. Preserve case boundaries and source references. Lifecycle observations must not be mistaken for distinct completed occurrences. Ties resolved only by source order must retain an ordering-ambiguity limitation. A homogeneous observation sequence may support a descriptive gap ranking; unknown timestamp meaning must not be relabeled as completion. Exclude semantically unusable observations from the affected metric with explicit counts/reasons, not from the source log silently.
 
 The detector consumes deterministic metrics and evidence from mining/performance modules. It does not parse CSV/XES, approve mappings, call LLMs, simulate interventions or expose HTTP endpoints. PM4Py discovery and DFG aggregations must use the same declared view as independent timestamp arithmetic; default library behavior must be checked against the selected semantics.
 
@@ -134,7 +134,7 @@ For M2, implement tests with independent interval arithmetic and fixed configura
 ## 9. M1 acceptance and deferred work
 
 - [ ] Group reviews and records DB-01–DB-07, including the minimum-support default and the scope of automated evidence categories.
-- [ ] TASK-03 final semantics are reconciled with the proposed baseline; PR #15 is not assumed merged.
+- [X] TASK-03 canonical event-log contract v0.1.0 is integrated into `master` through PR #15 and its semantics have been reviewed for compatibility with the detector baseline.
 - [ ] TASK-04 reviewers agree on the required interface reconciliation or explicitly track unresolved incompatibilities and prohibit misleading output.
 - [ ] Ranking, support, coverage, zero/missingness, ties and abstention behavior are unambiguous.
 - [ ] Historical research references and design oracles are reviewed; no research results are relabeled as product tests.
