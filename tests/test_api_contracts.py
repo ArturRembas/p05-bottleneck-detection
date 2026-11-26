@@ -66,6 +66,12 @@ def test_pr16_detector_alignment_and_evidence_categories():
     )
     candidate = CandidateBottleneck(
         candidate_id="cand-01",
+        ranking_status="ranked",
+        support_policy={
+            "policy_version": "0.1.0",
+            "min_observations": 3,
+            "min_distinct_cases": 3,
+        },
         target=target,
         evidence_category=EvidenceCategory.L1_DELAY_HOTSPOT,
         rank=1,
@@ -180,3 +186,85 @@ def test_invalid_bottleneck_targets(payload):
 def test_valid_bottleneck_targets(payload):
     target = BottleneckTarget(**payload)
     assert target.target_name == payload["target_name"]
+
+
+@pytest.mark.parametrize(
+    "n,c,rank,status,valid",
+    [
+        (12, 4, 1, "ranked", True),
+        (3, 3, 1, "ranked", True),
+        (2, 2, 1, "ranked", False),
+        (10, 1, 1, "ranked", False),
+        (0, 0, 1, "ranked", False),
+        (3, 5, 1, "ranked", False),
+        (5, 0, 1, "ranked", False),
+        (5, 5, None, "ranked", False),
+        (2, 2, None, "insufficient_support", True),
+        (10, 1, None, "insufficient_support", True),
+        (3, 3, None, "insufficient_support", False),
+        (0, 0, None, "insufficient_support", False),
+        (0, 0, None, "unavailable", True),
+        (2, 2, None, "unavailable", False),
+        (3, 3, None, "no_positive_signal", True),
+        (2, 2, None, "no_positive_signal", False),
+        (3, 3, 1, "no_positive_signal", False),
+    ],
+)
+def test_ranking_support_validation(n, c, rank, status, valid):
+    payload = {
+        "candidate_id": "candidate-test",
+        "target": {
+            "target_type": "transition",
+            "target_name": "Welding",
+            "source_activity": "Cutting",
+        },
+        "evidence_category": "L1_delay_hotspot",
+        "rank": rank,
+        "ranking_status": status,
+        "observations_count": n,
+        "distinct_cases_count": c,
+        "case_coverage_ratio": 0.0 if n == 0 else 0.5,
+        "support_policy": {
+            "policy_version": "0.1.0",
+            "min_observations": 3,
+            "min_distinct_cases": 3,
+        },
+    }
+
+    if valid:
+        candidate = CandidateBottleneck(**payload)
+        assert candidate.rank == rank
+    else:
+        with pytest.raises(ValidationError):
+            CandidateBottleneck(**payload)
+
+
+def test_configurable_support_threshold():
+    payload = {
+        "candidate_id": "candidate-config",
+        "target": {
+            "target_type": "transition",
+            "target_name": "Welding",
+            "source_activity": "Cutting",
+        },
+        "evidence_category": "L1_delay_hotspot",
+        "rank": 1,
+        "ranking_status": "ranked",
+        "observations_count": 3,
+        "distinct_cases_count": 3,
+        "case_coverage_ratio": 0.75,
+        "support_policy": {
+            "policy_version": "0.1.0-test",
+            "min_observations": 5,
+            "min_distinct_cases": 4,
+        },
+    }
+
+    with pytest.raises(ValidationError):
+        CandidateBottleneck(**payload)
+
+    payload["observations_count"] = 5
+    payload["distinct_cases_count"] = 4
+
+    candidate = CandidateBottleneck(**payload)
+    assert candidate.rank == 1

@@ -183,11 +183,32 @@ class CandidateReviewStatus(str, Enum):
     REJECTED = "rejected"
 
 
+class RankingStatus(str, Enum):
+    RANKED = "ranked"
+    INSUFFICIENT_SUPPORT = "insufficient_support"
+    NO_POSITIVE_SIGNAL = "no_positive_signal"
+    UNAVAILABLE = "unavailable"
+
+
+class SupportPolicy(ContractModel):
+    """Explicit and versioned detector support configuration."""
+
+    policy_version: str = Field(min_length=1)
+    min_observations: int = Field(ge=1, default=3)
+    min_distinct_cases: int = Field(ge=1, default=3)
+
+
 class CandidateBottleneck(ContractModel):
     candidate_id: str = Field(min_length=1)
     target: BottleneckTarget = Field(..., description="Target activity, transition or workstation (AL-06)")
     evidence_category: EvidenceCategory = Field(..., description="L1, L2 or L3 category per PR #16 (AL-05)")
-    rank: int = Field(ge=1, description="Ranking position based on maximum-mean-gap baseline")
+    ranking_status: RankingStatus
+    rank: int | None = Field(
+        default=None,
+        ge=1,
+        description="Rank within a comparable group, when supported",
+    )
+    support_policy: SupportPolicy
     ranking_group: int | None = Field(default=1, description="Priority cluster (AL-07)")
 
     # Parametri di supporto minimo di PR #16 (almeno 3 osservazioni su 3 casi)
@@ -202,6 +223,61 @@ class CandidateBottleneck(ContractModel):
     waiting_time_hours: float | None = Field(default=None, description="Measured queue wait in hours (only for L2/L3)")
     evidence_refs: list[str] = Field(default_factory=list)
     review_status: CandidateReviewStatus = CandidateReviewStatus.PENDING
+
+    @model_validator(mode="after")
+    def validate_ranking_support(self) -> "CandidateBottleneck":
+        n = self.observations_count
+        c = self.distinct_cases_count
+
+        if c > n:
+            raise ValueError(
+                "distinct_cases_count cannot exceed observations_count"
+            )
+
+        if n > 0 and c == 0:
+            raise ValueError(
+                "Positive observations require at least one distinct case"
+            )
+
+        supported = (
+            n >= self.support_policy.min_observations
+            and c >= self.support_policy.min_distinct_cases
+        )
+
+        if self.ranking_status == RankingStatus.RANKED:
+            if self.rank is None:
+                raise ValueError(
+                    "Rank is required for ranked findings"
+                )
+            if not supported:
+                raise ValueError(
+                    "Ranked findings require sufficient support"
+                )
+        elif self.rank is not None:
+            raise ValueError(
+                "Unranked findings must not carry a rank"
+            )
+
+        if self.ranking_status == RankingStatus.UNAVAILABLE:
+            if n != 0 or c != 0:
+                raise ValueError(
+                    "Unavailable findings cannot have eligible observations"
+                )
+
+        elif self.ranking_status == RankingStatus.INSUFFICIENT_SUPPORT:
+            if n == 0 or supported:
+                raise ValueError(
+                    "Insufficient support requires observations "
+                    "below the configured threshold"
+                )
+
+        elif self.ranking_status == RankingStatus.NO_POSITIVE_SIGNAL:
+            if not supported:
+                raise ValueError(
+                    "No-positive-signal findings require sufficient support"
+                )
+
+        return self
 
 
 # =====================================================================
