@@ -5,7 +5,7 @@ from enum import Enum
 from math import isclose
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 
 class ContractModel(BaseModel):
@@ -19,8 +19,8 @@ class ContractModel(BaseModel):
 
 class EvidenceCategory(str, Enum):
     """Evidence hierarchy defined in PR #16 (docs/DETECTOR_BASELINE.md)."""
-    L1_DELAY_HOTSPOT = "L1_delay_hotspot"              # Statistically long observed inter-event gap
-    L2_QUEUE_CANDIDATE = "L2_queue_candidate"          # Direct evidence of physical queue waiting
+    L1_DELAY_HOTSPOT = "L1_delay_hotspot"              # Observed inter-event delay signal
+    L2_QUEUE_CANDIDATE = "L2_queue_candidate"          # Evidence of correlated queue waiting
     L3_CAPACITY_HYPOTHESIS = "L3_capacity_hypothesis"  # Hypothesis of persistent capacity saturation
 
 
@@ -99,11 +99,37 @@ class MetricStatus(str, Enum):
     UNAVAILABLE = "unavailable"
 
 
+class SourceTimestampSemantics(str, Enum):
+    """Meaning of timestamps in the source event log."""
+
+    COMPLETION = "completion"
+    START = "start"
+    LIFECYCLE = "lifecycle"
+    OTHER_OBSERVED = "other_observed"
+    UNKNOWN = "unknown"
+
+
 class TimeSemantics(str, Enum):
-    COMPLETION_ONLY = "completion_only"
-    START_AND_COMPLETE = "start_and_complete"
+    """Meaning of an analytical temporal metric."""
+
+    OBSERVED_INTER_EVENT_GAP = "observed_inter_event_gap"
+    PROCESSING_DURATION = "processing_duration"
+    QUEUE_WAITING_DURATION = "queue_waiting_duration"
+    THROUGHPUT_DURATION = "throughput_duration"
     NOT_APPLICABLE = "not_applicable"
     UNKNOWN = "unknown"
+
+
+TEMPORAL_METRIC_SEMANTICS = {
+    "observed_transition_gap":
+        TimeSemantics.OBSERVED_INTER_EVENT_GAP,
+    "processing_time":
+        TimeSemantics.PROCESSING_DURATION,
+    "queue_waiting_time":
+        TimeSemantics.QUEUE_WAITING_DURATION,
+    "throughput_time":
+        TimeSemantics.THROUGHPUT_DURATION,
+}
 
 
 class EventLogFormat(str, Enum):
@@ -113,16 +139,23 @@ class EventLogFormat(str, Enum):
 
 class MetricProvenance(ContractModel):
     method: str = Field(min_length=1, description="Calculation method identifier (e.g., maximum_mean_gap)")
-    evidence_category: EvidenceCategory = Field(default=EvidenceCategory.L1_DELAY_HOTSPOT)
+    evidence_category: EvidenceCategory | None = Field(
+        default=None,
+        description="Evidence category, when applicable and established",
+    )
     input_fields: list[str] = Field(default_factory=list, description="Log attributes consumed")
-    algorithm_version: str | None = Field(default="0.1.0", description="Algorithm baseline version")
+    algorithm_version: str | None = Field(
+        default=None,
+        min_length=1,
+        description="Version of the algorithm actually used",
+    )
     evidence_refs: list[str] = Field(default_factory=list, description="Traceable evidence identifiers")
 
 
 class ProcessKPI(ContractModel):
     metric: str = Field(min_length=1, description="Stable metric identifier")
     value: float | None = Field(default=None, allow_inf_nan=False, description="Numeric value; null when unavailable")
-    unit: str = Field(min_length=1, description="Unit: seconds, hours, ratio, count")
+    unit: str = Field(min_length=1, description="Metric unit; temporal durations use seconds")
     status: MetricStatus
     time_semantics: TimeSemantics
     sample_size: int = Field(ge=0, description="Observations count")
@@ -137,7 +170,55 @@ class ProcessKPI(ContractModel):
             if not self.unavailable_reason:
                 raise ValueError("unavailable_reason is required when status is 'unavailable'")
         elif self.value is None:
-            raise ValueError("value must be provided unless status is 'unavailable'")
+            raise ValueError(
+                "value must be provided unless status is unavailable"
+            )
+        elif self.unavailable_reason is not None:
+            raise ValueError(
+                "Available metrics must not carry an unavailable reason"
+            )
+
+        expected_semantics = TEMPORAL_METRIC_SEMANTICS.get(
+            self.metric
+        )
+
+        if (
+            expected_semantics is not None
+            and self.time_semantics != expected_semantics
+        ):
+            raise ValueError(
+                "Metric identifier and temporal semantics are inconsistent"
+            )
+
+        temporal_semantics = {
+            TimeSemantics.OBSERVED_INTER_EVENT_GAP,
+            TimeSemantics.PROCESSING_DURATION,
+            TimeSemantics.QUEUE_WAITING_DURATION,
+            TimeSemantics.THROUGHPUT_DURATION,
+        }
+
+        if self.time_semantics in temporal_semantics:
+            if self.unit != "seconds":
+                raise ValueError(
+                    "Temporal duration metrics must use seconds"
+                )
+
+            if self.value is not None and self.value < 0:
+                raise ValueError(
+                    "Temporal durations cannot be negative"
+                )
+
+            if (
+                self.status in {
+                    MetricStatus.MEASURED,
+                    MetricStatus.DERIVED,
+                }
+                and self.sample_size == 0
+            ):
+                raise ValueError(
+                    "Observed or derived durations require observations"
+                )
+
         return self
 
 
@@ -150,11 +231,12 @@ class CapabilityStatus(str, Enum):
 class CapabilityAssessment(ContractModel):
     status: CapabilityStatus
     reason: str | None = Field(default=None, description="Explanation when partial or unavailable")
+    runtime_implemented: bool = Field(description="Whether the capability is implemented, independently of data eligibility")
 
     @model_validator(mode="after")
     def explain_unavailable(self) -> "CapabilityAssessment":
-        if self.status == CapabilityStatus.UNAVAILABLE and not self.reason:
-            raise ValueError("reason is required when capability status is 'unavailable'")
+        if self.status != CapabilityStatus.AVAILABLE and not self.reason:
+            raise ValueError("reason is required for partial or unavailable capabilities")
         return self
 
 
@@ -162,6 +244,9 @@ class CapabilityReport(ContractModel):
     process_discovery: CapabilityAssessment
     kpi_calculation: CapabilityAssessment
     bottleneck_detection: CapabilityAssessment
+    observed_inter_event_gaps: CapabilityAssessment
+    processing_durations: CapabilityAssessment
+    queue_waiting_durations: CapabilityAssessment
     resource_analysis: CapabilityAssessment
     bpmn_export: CapabilityAssessment
     simulation: CapabilityAssessment
@@ -263,6 +348,8 @@ class RankingGroup(ContractModel):
     analytical_view_ref: str = Field(min_length=1)
     observation_window_ref: str = Field(min_length=1)
     coverage_class: CoverageClass
+    statistic: Literal["mean"] = "mean"
+    unit: Literal["seconds"] = "seconds"
 
 
 class CandidateBottleneck(ContractModel):
@@ -278,10 +365,12 @@ class CandidateBottleneck(ContractModel):
     support_policy: SupportPolicy
     ranking_group: RankingGroup | None = None
 
-    # Parametri di supporto minimo di PR #16 (almeno 3 osservazioni su 3 casi)
-    observations_count: int = Field(ge=0, description="Total valid observations (min support: 3)")
-    distinct_cases_count: int = Field(ge=0, description="Distinct cases affected (min support: 3)")
+    # Configurable minimum support (proposed DB-04).
+    observations_count: int = Field(ge=0, description="Total eligible observations")
+    distinct_cases_count: int = Field(ge=0, description="Distinct cases contributing eligible observations")
     observation_coverage: ObservationCoverage
+    affected_cases_count: int | None = Field(default=None, ge=0)
+    total_cases_count: int | None = Field(default=None, ge=1)
     case_coverage_ratio: float | None = Field(
         default=None,
         ge=0.0,
@@ -289,11 +378,18 @@ class CandidateBottleneck(ContractModel):
         description="Affected-case ratio when independently established",
     )
 
-    # Severità opzionale: non forzata se i dati non la supportano (PR #16)
+    # Optional severity; never inferred solely from evidence category.
     severity: BottleneckSeverity | None = Field(default=None, description="Optional severity classification")
 
-    observed_gap_hours: float | None = Field(default=None, description="Mean observed inter-event gap in hours")
-    waiting_time_hours: float | None = Field(default=None, description="Measured queue wait in hours (only for L2/L3)")
+    primary_metric: ProcessKPI = Field(description="Mean duration used for ranking; null value if unavailable")
+    median_seconds: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    maximum_seconds: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    positive_wait_fraction: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
+    analytical_view_ref: str = Field(min_length=1)
+    observation_window_ref: str = Field(min_length=1)
+    detector_rule_ref: str = Field(min_length=1)
+    detector_config_ref: str = Field(min_length=1)
+    limitations: list[str] = Field(default_factory=list)
     evidence_refs: list[str] = Field(default_factory=list)
     review_status: CandidateReviewStatus = CandidateReviewStatus.PENDING
 
@@ -301,6 +397,59 @@ class CandidateBottleneck(ContractModel):
     def validate_ranking_support(self) -> "CandidateBottleneck":
         n = self.observations_count
         c = self.distinct_cases_count
+        if self.case_coverage_ratio is not None:
+            if self.affected_cases_count is None or self.total_cases_count is None:
+                raise ValueError("Affected-case ratio requires explicit counts")
+            if self.affected_cases_count > self.total_cases_count or not isclose(self.case_coverage_ratio, self.affected_cases_count / self.total_cases_count):
+                raise ValueError("Inconsistent affected-case ratio")
+        if self.affected_cases_count is not None and self.affected_cases_count > c:
+            raise ValueError("Affected cases cannot exceed contributing cases")
+        if self.total_cases_count is not None and c > self.total_cases_count:
+            raise ValueError("Contributing cases cannot exceed total cases")
+        metric = self.primary_metric
+        if self.evidence_category == EvidenceCategory.L3_CAPACITY_HYPOTHESIS:
+            raise ValueError("L3 is reserved; no reviewed capacity inference rule is implemented in this baseline")
+        expected = (
+            "observed_transition_gap" if self.evidence_category == EvidenceCategory.L1_DELAY_HOTSPOT
+            else "queue_waiting_time"
+        )
+        if metric.metric != expected:
+            raise ValueError("Primary metric must match evidence category")
+        if metric.provenance.evidence_category != self.evidence_category:
+            raise ValueError("Metric provenance must match finding evidence category")
+        if self.evidence_category == EvidenceCategory.L1_DELAY_HOTSPOT and self.target.target_type != TargetType.TRANSITION:
+            raise ValueError("L1 requires a directed transition")
+        if self.evidence_category == EvidenceCategory.L2_QUEUE_CANDIDATE and self.target.target_type == TargetType.TRANSITION:
+            raise ValueError("L2 requires an activity or mapped workstation")
+        if metric.sample_size != n:
+            raise ValueError("Metric sample size must match eligible observations")
+        if metric.status == MetricStatus.ESTIMATED:
+            raise ValueError("Estimated values cannot support deterministic findings")
+        if self.ranking_status == RankingStatus.UNAVAILABLE:
+            if metric.status != MetricStatus.UNAVAILABLE:
+                raise ValueError("Unavailable finding requires unavailable metric")
+        elif metric.status not in {MetricStatus.MEASURED, MetricStatus.DERIVED}:
+            raise ValueError("Finding requires observed or derived metric")
+        if self.ranking_status == RankingStatus.RANKED and (metric.value is None or metric.value <= 0):
+            raise ValueError("Ranked finding requires positive mean duration")
+        if self.ranking_status == RankingStatus.NO_POSITIVE_SIGNAL and metric.value != 0:
+            raise ValueError("No-positive-signal finding requires observed zero mean")
+        if n == 0 and any(v is not None for v in (self.median_seconds, self.maximum_seconds, self.positive_wait_fraction)):
+            raise ValueError("Unavailable findings cannot carry observed statistics")
+        if self.maximum_seconds is not None and (metric.value > self.maximum_seconds or (self.median_seconds is not None and self.median_seconds > self.maximum_seconds)):
+            raise ValueError("Maximum cannot be below mean or median")
+        if expected == "queue_waiting_time" and n > 0:
+            if self.positive_wait_fraction is None:
+                raise ValueError("Queue evidence requires positive-wait fraction")
+            if (metric.value == 0) != (self.positive_wait_fraction == 0):
+                raise ValueError("Positive-wait fraction contradicts mean")
+        elif self.positive_wait_fraction is not None:
+            raise ValueError("Positive-wait fraction applies only to observed queue waits")
+        if self.ranking_group is not None:
+            if (self.ranking_group.metric != metric.metric or
+                self.ranking_group.analytical_view_ref != self.analytical_view_ref or
+                self.ranking_group.observation_window_ref != self.observation_window_ref):
+                raise ValueError("Ranking group must match metric, view and window")
 
         if self.observation_coverage.eligible_count != n:
             raise ValueError(
@@ -381,13 +530,48 @@ class CandidateBottleneck(ContractModel):
 # PR #15 CANONICAL LOG METADATA & REVISION TRACKING
 # =====================================================================
 
+class DatasetIdentity(ContractModel):
+    dataset_id: str = Field(min_length=1)
+    input_sha256: str = Field(pattern=r"^[a-fA-F0-9]{64}$")
+
+
+class DatasetProfile(DatasetIdentity):
+    format: EventLogFormat
+    profile_ref: str = Field(min_length=1)
+    attributes: list[str] = Field(description="Minimized structural attributes; no raw event values")
+
+
+class MappingRevision(DatasetIdentity):
+    mapping_id: str = Field(min_length=1)
+    mapping_version: int = Field(ge=1)
+    mapping_contract_version: str = Field(min_length=1)
+
+
+class MappingProposal(MappingRevision):
+    status: Literal["proposed"]
+    mapping_document_ref: str = Field(min_length=1, description="Stored TASK-03 mapping document without trusted approval")
+
+
+class MappingConfirmation(MappingRevision):
+    status: Literal["confirmed"]
+    approval_ref: str = Field(min_length=1)
+    actor_ref: str = Field(min_length=1)
+    confirmed_at: AwareDatetime
+
+
+class AnalysisRequest(MappingRevision):
+    approval_ref: str = Field(min_length=1, description="Server must verify exact mapping revision and input hash against trusted human approval")
+    ingestion_authorization_ref: str = Field(min_length=1, description="Separate trusted ingestion authorization")
+
+
 class SourceMetadata(ContractModel):
     format: EventLogFormat
-    canonical_schema_version: str = Field(default="0.1.0", description="Canonical schema from PR #15")
-    mapping_contract_version: str = Field(default="0.1.0", description="Mapping specification version")
-    mapping_revision_id: str | None = Field(default=None, description="Traceable confirmed mapping reference")
-    input_sha256: str = Field(pattern=r"^[a-fA-F0-9]{64}$", description="SHA-256 integrity hash")
-    time_semantics: TimeSemantics
+    canonical_schema_version: str = Field(min_length=1)
+    confirmed_mapping: MappingConfirmation
+    source_timestamp_semantics: SourceTimestampSemantics
+    case_notion: str = Field(min_length=1)
+    normalized_timezone: Literal["UTC"]
+    quality_report_ref: str = Field(min_length=1)
     source_log_version: str | None = None
 
 
@@ -435,10 +619,24 @@ class PublicationState(str, Enum):
     PUBLISHED = "published"
 
 
+class AnalysisExecutionStatus(str, Enum):
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class EvidenceRecord(ContractModel):
+    evidence_id: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    artifact_ref: str = Field(min_length=1, description="Authorized deterministic artifact reference; not raw event data")
+
+
 class AnalysisResultPayload(ContractModel):
     schema_version: Literal["0.2.0"] = "0.2.0"
     analysis_id: str = Field(min_length=1)
-    timestamp: datetime
+    timestamp: AwareDatetime
+    result_revision: str = Field(min_length=1)
+    execution_status: AnalysisExecutionStatus
+    evidence: list[EvidenceRecord] = Field(default_factory=list)
     publication_state: PublicationState = Field(default=PublicationState.INTERNAL_DRAFT)
     source: SourceMetadata
     capabilities: CapabilityReport
@@ -448,8 +646,29 @@ class AnalysisResultPayload(ContractModel):
     simulated_scenarios: list[SimulationScenarioResult] = Field(default_factory=list)
     limitations: list[DatasetLimitation] = Field(default_factory=list)
 
+    @model_validator(mode="after")
+    def validate_result(self) -> "AnalysisResultPayload":
+        if self.execution_status != AnalysisExecutionStatus.COMPLETED:
+            if self.publication_state != PublicationState.INTERNAL_DRAFT or self.candidate_bottlenecks or self.kpis:
+                raise ValueError("Failed analysis cannot expose completed results or be published")
+        ids = {item.evidence_id for item in self.evidence}
+        if len(ids) != len(self.evidence):
+            raise ValueError("Duplicate evidence identifiers")
+        refs = set()
+        for item in self.kpis:
+            refs.update(item.provenance.evidence_refs)
+        for item in self.candidate_bottlenecks:
+            refs.update(item.evidence_refs)
+            refs.update(item.primary_metric.provenance.evidence_refs)
+        for item in self.ai_interpretations:
+            refs.update(item.evidence_refs)
+        if not refs <= ids:
+            raise ValueError("Evidence references must resolve within the result revision")
+        return self
+
 
 class ApprovalRequest(ContractModel):
+    result_revision: str = Field(min_length=1)
     candidate_id: str = Field(min_length=1)
     countermeasure_id: str = Field(min_length=1)
     workstation: str = Field(min_length=1)
@@ -460,6 +679,7 @@ class ApprovalRequest(ContractModel):
 class ApprovalResponse(ContractModel):
     approval_id: str
     analysis_id: str
+    result_revision: str
     candidate_id: str
     countermeasure_id: str
     status: Literal["approved"]
@@ -469,14 +689,22 @@ class ApprovalResponse(ContractModel):
 
 
 class PublishRequest(ContractModel):
-    analysis_id: str = Field(min_length=1)
-    authorized_consumers: list[str] = Field(default_factory=lambda: ["P06", "P20", "P17"])
-    authorization_token: str = Field(min_length=1)
+    result_revision: str = Field(min_length=1)
+    authorized_consumers: list[Literal["P06", "P20", "P17", "P21"]] = Field(min_length=1)
+    publication_approval_ref: str = Field(min_length=1, description="Trusted human decision bound to path analysis ID, exact revision and selected consumers")
+
+    @model_validator(mode="after")
+    def unique_consumers(self) -> "PublishRequest":
+        if len(set(self.authorized_consumers)) != len(self.authorized_consumers):
+            raise ValueError("Consumers must be unique")
+        return self
 
 
 class PublishResponse(ContractModel):
     publication_id: str
     analysis_id: str
+    result_revision: str
+    publication_approval_ref: str
     status: Literal["published"]
     published_at: datetime
     consumers: list[str]

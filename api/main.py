@@ -11,6 +11,11 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .schemas import (
     AnalysisResultPayload,
+    AnalysisRequest,
+    DatasetProfile,
+    MappingProposal,
+    MappingConfirmation,
+    MappingRevision,
     ApprovalRequest,
     ApprovalResponse,
     CandidateBottleneck,
@@ -94,6 +99,7 @@ ERROR_RESPONSES: dict[int, dict[str, Any]] = {
 
 @app.post(
     f"{API_PREFIX}/datasets/upload",
+    response_model=DatasetProfile,
     operation_id="upload_dataset",
     summary="Upload dataset and generate structural profile",
     responses={413: ERROR_RESPONSES[413], 415: ERROR_RESPONSES[415], 422: ERROR_RESPONSES[422], 501: ERROR_RESPONSES[501]},
@@ -114,38 +120,43 @@ async def upload_dataset(
     raise APIError(501, "DATASET_SERVICE_NOT_IMPLEMENTED", "Staged dataset profiling service pending integration.")
 
 
-# --- CORE ANALYSIS EXECUTION ---
+# Mapping documents remain owned by TASK-03. These are reference-based
+# boundaries; server-side storage, validation and authorization are deferred.
+@app.post(
+    f"{API_PREFIX}/datasets/{{dataset_id}}/mapping/propose",
+    response_model=MappingProposal,
+    operation_id="propose_semantic_mapping",
+    description="Manual or AI-assisted proposal service; AI may use only authorized minimized profiles. No automatic confirmation.",
+    responses={422: ERROR_RESPONSES[422], 501: ERROR_RESPONSES[501]},
+)
+async def propose_mapping(dataset_id: str, mapping_document_ref: str = Query(..., min_length=1)) -> MappingProposal:
+    raise APIError(501, "MAPPING_SERVICE_NOT_IMPLEMENTED", "Mapping proposal service pending integration.")
+
+
+@app.post(
+    f"{API_PREFIX}/datasets/{{dataset_id}}/mapping/confirm",
+    response_model=MappingConfirmation,
+    operation_id="confirm_semantic_mapping",
+    description="Requires authenticated human confirmation of exact input hash and mapping revision. Never authorizes ingestion implicitly.",
+    responses={409: ERROR_RESPONSES[409], 422: ERROR_RESPONSES[422], 501: ERROR_RESPONSES[501]},
+)
+async def confirm_mapping(dataset_id: str, request: MappingRevision) -> MappingConfirmation:
+    if dataset_id != request.dataset_id:
+        raise APIError(409, "DATASET_ID_MISMATCH", "Path and body dataset identifiers differ.")
+    raise APIError(501, "MAPPING_CONFIRMATION_NOT_IMPLEMENTED", "Trusted confirmation service pending integration.")
+
 
 @app.post(
     f"{API_PREFIX}/analyses",
     response_model=AnalysisResultPayload,
     operation_id="create_analysis",
-    summary="Create an analysis",
-    responses={413: ERROR_RESPONSES[413], 415: ERROR_RESPONSES[415], 422: ERROR_RESPONSES[422], 500: ERROR_RESPONSES[500], 501: ERROR_RESPONSES[501]},
+    summary="Create analysis from confirmed mapping",
+    description="Server must verify exact dataset hash, mapping revision, trusted human confirmation and separate ingestion authorization before execution.",
+    responses={409: ERROR_RESPONSES[409], 422: ERROR_RESPONSES[422], 500: ERROR_RESPONSES[500], 501: ERROR_RESPONSES[501]},
     tags=["Analysis ingestion and processing"],
 )
-async def create_analysis(
-    file: UploadFile = File(..., description="Event log in CSV or XES format"),
-    case_id_col: str = Query("Case_ID", min_length=1),
-    activity_col: str = Query("Activity", min_length=1),
-    timestamp_col: str = Query("Timestamp", min_length=1),
-) -> AnalysisResultPayload:
-    suffix = Path(file.filename or "").suffix.lower()
-    if suffix not in ALLOWED_EXTENSIONS:
-        raise APIError(415, "UNSUPPORTED_LOG_FORMAT", "Only .csv and .xes event logs are accepted.")
-
-    content = await file.read(MAX_UPLOAD_BYTES + 1)
-    if len(content) > MAX_UPLOAD_BYTES:
-        raise APIError(413, "FILE_TOO_LARGE", f"The upload exceeds the {MAX_UPLOAD_BYTES}-byte limit.")
-    if not content:
-        raise APIError(422, "EMPTY_FILE", "The uploaded event log is empty.")
-
-    _ = (case_id_col, activity_col, timestamp_col, file.filename, content)
-    raise APIError(
-        501,
-        "ANALYSIS_ENGINE_NOT_IMPLEMENTED",
-        "Upload validation succeeded, but ingestion and deterministic analysis must be integrated separately.",
-    )
+async def create_analysis(request: AnalysisRequest) -> AnalysisResultPayload:
+    raise APIError(501, "ANALYSIS_ENGINE_NOT_IMPLEMENTED", "Confirmed ingestion and deterministic analysis pending integration.")
 
 
 # --- INTEROPERABILITY & RESULTS (AL-05, AL-06, AL-07, PR #16) ---
@@ -156,6 +167,7 @@ async def create_analysis(
     operation_id="get_candidate_bottlenecks",
     summary="Get candidate bottlenecks",
     responses={404: ERROR_RESPONSES[404], 422: ERROR_RESPONSES[422], 500: ERROR_RESPONSES[500], 501: ERROR_RESPONSES[501]},
+    description="Internal authorized retrieval only; external consumers require a separate published revision interface.",
     tags=["Interoperability P06 / P20"],
 )
 async def get_bottlenecks(analysis_id: str) -> list[CandidateBottleneck]:
@@ -169,6 +181,7 @@ async def get_bottlenecks(analysis_id: str) -> list[CandidateBottleneck]:
     operation_id="get_process_kpis",
     summary="Get process KPIs",
     responses={404: ERROR_RESPONSES[404], 422: ERROR_RESPONSES[422], 500: ERROR_RESPONSES[500], 501: ERROR_RESPONSES[501]},
+    description="Internal authorized retrieval only; external consumers require a separate published revision interface.",
     tags=["Interoperability P17"],
 )
 async def get_process_kpis(analysis_id: str) -> list[ProcessKPI]:
@@ -212,7 +225,8 @@ async def approve_countermeasure(analysis_id: str, request: ApprovalRequest) -> 
     f"{API_PREFIX}/analyses/{{analysis_id}}/publish",
     response_model=PublishResponse,
     operation_id="publish_analysis_results",
-    summary="Authorize and publish findings to external puzzle peers",
+    summary="Publish an explicitly approved result revision",
+    description="Server must verify trusted human approval for the path analysis ID, exact result revision and explicit consumer set. No client reference grants authorization by itself.",
     responses={404: ERROR_RESPONSES[404], 409: ERROR_RESPONSES[409], 422: ERROR_RESPONSES[422], 500: ERROR_RESPONSES[500], 501: ERROR_RESPONSES[501]},
     tags=["External Publication"],
 )
