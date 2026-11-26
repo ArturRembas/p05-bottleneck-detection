@@ -1,0 +1,2 @@
+# Preserve the original bytes of the initial-prototype dataset.
+log_manifattura_1000_ordini.csv -text !eol

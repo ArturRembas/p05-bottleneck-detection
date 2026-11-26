@@ -1,0 +1,3 @@
+# Keep original snapshot bytes on every checkout.
+snapshot/** -text !eol
+SHA256SUMS text eol=lf
