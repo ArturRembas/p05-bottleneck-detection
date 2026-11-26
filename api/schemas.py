@@ -31,10 +31,60 @@ class TargetType(str, Enum):
 
 
 class BottleneckTarget(ContractModel):
-    target_type: TargetType = Field(..., description="Target type: workstation, activity, or transition")
-    target_name: str = Field(..., description="Identifier of the target activity or station")
-    source_activity: str | None = Field(default=None, description="Source activity if target is a transition")
-    station_id: str | None = Field(default=None, description="Physical workstation ID if explicitly mapped")
+    """Unambiguous analytical target for a detector finding."""
+
+    target_type: TargetType = Field(
+        ...,
+        description="Target type: activity, transition, or workstation",
+    )
+    target_name: str = Field(
+        min_length=1,
+        description="Activity name, destination activity, or workstation name",
+    )
+    source_activity: str | None = Field(
+        default=None,
+        min_length=1,
+        description="Source activity for a directed transition",
+    )
+    station_id: str | None = Field(
+        default=None,
+        min_length=1,
+        description="Explicitly mapped workstation identifier",
+    )
+
+    @model_validator(mode="after")
+    def validate_target(self) -> "BottleneckTarget":
+        if self.target_type == TargetType.TRANSITION:
+            if not self.source_activity:
+                raise ValueError(
+                    "source_activity is required for transition targets"
+                )
+            if self.station_id is not None:
+                raise ValueError(
+                    "station_id is not allowed for transition targets"
+                )
+
+        elif self.target_type == TargetType.WORKSTATION:
+            if not self.station_id:
+                raise ValueError(
+                    "station_id is required for workstation targets"
+                )
+            if self.source_activity is not None:
+                raise ValueError(
+                    "source_activity is not allowed for workstation targets"
+                )
+
+        elif self.target_type == TargetType.ACTIVITY:
+            if self.source_activity is not None:
+                raise ValueError(
+                    "source_activity is not allowed for activity targets"
+                )
+            if self.station_id is not None:
+                raise ValueError(
+                    "station_id is not allowed for activity targets"
+                )
+
+        return self
 
 
 # =====================================================================

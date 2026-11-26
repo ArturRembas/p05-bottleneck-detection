@@ -107,3 +107,76 @@ def test_data_capability_honesty_validation():
             sample_size=100,
             provenance=provenance
         )
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "target_type": "transition",
+            "target_name": "Welding",
+        },
+        {
+            "target_type": "workstation",
+            "target_name": "CNC",
+        },
+        {
+            "target_type": "activity",
+            "target_name": "Cutting",
+            "source_activity": "Welding",
+        },
+        {
+            "target_type": "activity",
+            "target_name": "Cutting",
+            "station_id": "CNC-01",
+        },
+        {
+            "target_type": "transition",
+            "target_name": "Welding",
+            "source_activity": "Cutting",
+            "station_id": "CNC-01",
+        },
+        {
+            "target_type": "workstation",
+            "target_name": "CNC",
+            "station_id": "CNC-01",
+            "source_activity": "Cutting",
+        },
+        {
+            "target_type": "activity",
+            "target_name": "   ",
+        },
+    ],
+)
+def test_invalid_bottleneck_targets(payload):
+    with pytest.raises(ValidationError):
+        BottleneckTarget(**payload)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "target_type": "activity",
+            "target_name": "Cutting",
+        },
+        {
+            "target_type": "transition",
+            "target_name": "Welding",
+            "source_activity": "Cutting",
+        },
+        {
+            "target_type": "workstation",
+            "target_name": "CNC",
+            "station_id": "CNC-01",
+        },
+        {
+            "target_type": "transition",
+            "target_name": "Milling",
+            "source_activity": "Milling",
+        },
+    ],
+)
+def test_valid_bottleneck_targets(payload):
+    target = BottleneckTarget(**payload)
+    assert target.target_name == payload["target_name"]
