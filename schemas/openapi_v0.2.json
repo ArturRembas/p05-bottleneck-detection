@@ -1,0 +1,2364 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "P05 \u2014 Bottleneck Detection in Processes API",
+    "description": "API for P05 \u2014 Bottleneck Detection in Processes | AI Puzzle Framework",
+    "version": "0.2.0"
+  },
+  "paths": {
+    "/api/v1/datasets/upload": {
+      "post": {
+        "tags": [
+          "Dataset Ingestion"
+        ],
+        "summary": "Upload dataset and generate structural profile",
+        "operationId": "upload_dataset",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_dataset"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetProfile"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Uploaded file exceeds configured size limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported event-log format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/mapping/propose": {
+      "post": {
+        "summary": "Propose Mapping",
+        "description": "Manual or AI-assisted proposal service; AI may use only authorized minimized profiles. No automatic confirmation.",
+        "operationId": "propose_semantic_mapping",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "mapping_document_ref",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Mapping Document Ref"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MappingProposal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/mapping/confirm": {
+      "post": {
+        "summary": "Confirm Mapping",
+        "description": "Requires authenticated human confirmation of exact input hash and mapping revision. Never authorizes ingestion implicitly.",
+        "operationId": "confirm_semantic_mapping",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MappingRevision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MappingConfirmation"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current resource state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses": {
+      "post": {
+        "tags": [
+          "Analysis ingestion and processing"
+        ],
+        "summary": "Create analysis from confirmed mapping",
+        "description": "Server must verify exact dataset hash, mapping revision, trusted human confirmation and separate ingestion authorization before execution.",
+        "operationId": "create_analysis",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResultPayload"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current resource state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/bottlenecks": {
+      "get": {
+        "tags": [
+          "Interoperability P06 / P20"
+        ],
+        "summary": "Get candidate bottlenecks",
+        "description": "Internal authorized retrieval only; external consumers require a separate published revision interface.",
+        "operationId": "get_candidate_bottlenecks",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateBottleneck"
+                  },
+                  "title": "Response Get Candidate Bottlenecks"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Analysis or requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/kpis": {
+      "get": {
+        "tags": [
+          "Interoperability P17"
+        ],
+        "summary": "Get process KPIs",
+        "description": "Internal authorized retrieval only; external consumers require a separate published revision interface.",
+        "operationId": "get_process_kpis",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProcessKPI"
+                  },
+                  "title": "Response Get Process Kpis"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Analysis or requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/full-report": {
+      "get": {
+        "tags": [
+          "Full analysis result"
+        ],
+        "summary": "Get the full analysis report",
+        "operationId": "get_full_analysis_report",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResultPayload"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Analysis or requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/countermeasures/approve": {
+      "post": {
+        "tags": [
+          "Human oversight"
+        ],
+        "summary": "Approve a countermeasure (Human Gate)",
+        "operationId": "approve_countermeasure",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Analysis or requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current resource state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/publish": {
+      "post": {
+        "tags": [
+          "External Publication"
+        ],
+        "summary": "Publish an explicitly approved result revision",
+        "description": "Server must verify trusted human approval for the path analysis ID, exact result revision and explicit consumer set. No client reference grants authorization by itself.",
+        "operationId": "publish_analysis_results",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Analysis or requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current resource state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyses/{analysis_id}/export-bpmn": {
+      "get": {
+        "tags": [
+          "Export and interoperability P21"
+        ],
+        "summary": "Export the discovered process as BPMN XML",
+        "operationId": "export_bpmn_xml",
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "BPMN 2.0 XML document",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Analysis or requested resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Application service is not implemented yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Technical"
+        ],
+        "summary": "Health",
+        "operationId": "get_health_status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Get Health Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AIInterpretation": {
+        "properties": {
+          "interpretation_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Interpretation Id"
+          },
+          "target_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Ref",
+            "description": "Target candidate or metric ID interpreted"
+          },
+          "type": {
+            "$ref": "#/components/schemas/AIInterpretationType"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Refs"
+          },
+          "model_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Name"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "interpretation_id",
+          "type",
+          "text"
+        ],
+        "title": "AIInterpretation"
+      },
+      "AIInterpretationType": {
+        "type": "string",
+        "enum": [
+          "hypothesis",
+          "explanatory",
+          "limitation"
+        ],
+        "title": "AIInterpretationType"
+      },
+      "AnalysisExecutionStatus": {
+        "type": "string",
+        "enum": [
+          "completed",
+          "failed"
+        ],
+        "title": "AnalysisExecutionStatus"
+      },
+      "AnalysisRequest": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Dataset Id"
+          },
+          "input_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$",
+            "title": "Input Sha256"
+          },
+          "mapping_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Mapping Id"
+          },
+          "mapping_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Mapping Version"
+          },
+          "mapping_contract_version": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Mapping Contract Version"
+          },
+          "approval_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Approval Ref",
+            "description": "Server must verify exact mapping revision and input hash against trusted human approval"
+          },
+          "ingestion_authorization_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Ingestion Authorization Ref",
+            "description": "Separate trusted ingestion authorization"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "input_sha256",
+          "mapping_id",
+          "mapping_version",
+          "mapping_contract_version",
+          "approval_ref",
+          "ingestion_authorization_ref"
+        ],
+        "title": "AnalysisRequest"
+      },
+      "AnalysisResultPayload": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "0.2.0",
+            "title": "Schema Version",
+            "default": "0.2.0"
+          },
+          "analysis_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Analysis Id"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "result_revision": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Result Revision"
+          },
+          "execution_status": {
+            "$ref": "#/components/schemas/AnalysisExecutionStatus"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRecord"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "publication_state": {
+            "$ref": "#/components/schemas/PublicationState",
+            "default": "internal_draft"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceMetadata"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/CapabilityReport"
+          },
+          "kpis": {
+            "items": {
+              "$ref": "#/components/schemas/ProcessKPI"
+            },
+            "type": "array",
+            "title": "Kpis"
+          },
+          "candidate_bottlenecks": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateBottleneck"
+            },
+            "type": "array",
+            "title": "Candidate Bottlenecks"
+          },
+          "ai_interpretations": {
+            "items": {
+              "$ref": "#/components/schemas/AIInterpretation"
+            },
+            "type": "array",
+            "title": "Ai Interpretations"
+          },
+          "simulated_scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/SimulationScenarioResult"
+            },
+            "type": "array",
+            "title": "Simulated Scenarios"
+          },
+          "limitations": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetLimitation"
+            },
+            "type": "array",
+            "title": "Limitations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "analysis_id",
+          "timestamp",
+          "result_revision",
+          "execution_status",
+          "source",
+          "capabilities"
+        ],
+        "title": "AnalysisResultPayload"
+      },
+      "ApprovalRequest": {
+        "properties": {
+          "result_revision": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Result Revision"
+          },
+          "candidate_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Candidate Id"
+          },
+          "countermeasure_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Countermeasure Id"
+          },
+          "workstation": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Workstation"
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Action"
+          },
+          "supervisor_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Notes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result_revision",
+          "candidate_id",
+          "countermeasure_id",
+          "workstation",
+          "action"
+        ],
+        "title": "ApprovalRequest"
+      },
+      "ApprovalResponse": {
+        "properties": {
+          "approval_id": {
+            "type": "string",
+            "title": "Approval Id"
+          },
+          "analysis_id": {
+            "type": "string",
+            "title": "Analysis Id"
+          },
+          "result_revision": {
+            "type": "string",
+            "title": "Result Revision"
+          },
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id"
+          },
+          "countermeasure_id": {
+            "type": "string",
+            "title": "Countermeasure Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "approved",
+            "title": "Status"
+          },
+          "approver_id": {
+            "type": "string",
+            "title": "Approver Id",
+            "description": "Derived from authenticated user context"
+          },
+          "approval_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Approval Timestamp"
+          },
+          "supervisor_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Notes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_id",
+          "analysis_id",
+          "result_revision",
+          "candidate_id",
+          "countermeasure_id",
+          "status",
+          "approver_id",
+          "approval_timestamp"
+        ],
+        "title": "ApprovalResponse"
+      },
+      "Body_upload_dataset": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "Event log in CSV or XES format"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_dataset"
+      },
+      "BottleneckSeverity": {
+        "type": "string",
+        "enum": [
+          "LOW",
+          "MEDIUM",
+          "HIGH",
+          "CRITICAL"
+        ],
+        "title": "BottleneckSeverity"
+      },
+      "BottleneckTarget": {
+        "properties": {
+          "target_type": {
+            "$ref": "#/components/schemas/TargetType",
+            "description": "Target type: activity, transition, or workstation"
+          },
+          "target_name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Target Name",
+            "description": "Activity name, destination activity, or workstation name"
+          },
+          "source_activity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Activity",
+            "description": "Source activity for a directed transition"
+          },
+          "station_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Station Id",
+            "description": "Explicitly mapped workstation identifier"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target_type",
+          "target_name"
+        ],
+        "title": "BottleneckTarget",
+        "description": "Unambiguous analytical target for a detector finding."
+      },
+      "CandidateBottleneck": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Candidate Id"
+          },
+          "target": {
+            "$ref": "#/components/schemas/BottleneckTarget",
+            "description": "Target activity, transition or workstation (AL-06)"
+          },
+          "evidence_category": {
+            "$ref": "#/components/schemas/EvidenceCategory",
+            "description": "L1, L2 or L3 category per PR #16 (AL-05)"
+          },
+          "ranking_status": {
+            "$ref": "#/components/schemas/RankingStatus"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank",
+            "description": "Rank within a comparable group, when supported"
+          },
+          "support_policy": {
+            "$ref": "#/components/schemas/SupportPolicy"
+          },
+          "ranking_group": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RankingGroup"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observations_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Observations Count",
+            "description": "Total eligible observations"
+          },
+          "distinct_cases_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Distinct Cases Count",
+            "description": "Distinct cases contributing eligible observations"
+          },
+          "observation_coverage": {
+            "$ref": "#/components/schemas/ObservationCoverage"
+          },
+          "affected_cases_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affected Cases Count"
+          },
+          "total_cases_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Cases Count"
+          },
+          "case_coverage_ratio": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Coverage Ratio",
+            "description": "Affected-case ratio when independently established"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BottleneckSeverity"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional severity classification"
+          },
+          "primary_metric": {
+            "$ref": "#/components/schemas/ProcessKPI",
+            "description": "Mean duration used for ranking; null value if unavailable"
+          },
+          "median_seconds": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Seconds"
+          },
+          "maximum_seconds": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximum Seconds"
+          },
+          "positive_wait_fraction": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positive Wait Fraction"
+          },
+          "analytical_view_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Analytical View Ref"
+          },
+          "observation_window_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Observation Window Ref"
+          },
+          "detector_rule_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Detector Rule Ref"
+          },
+          "detector_config_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Detector Config Ref"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Refs"
+          },
+          "review_status": {
+            "$ref": "#/components/schemas/CandidateReviewStatus",
+            "default": "pending"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "target",
+          "evidence_category",
+          "ranking_status",
+          "support_policy",
+          "observations_count",
+          "distinct_cases_count",
+          "observation_coverage",
+          "primary_metric",
+          "analytical_view_ref",
+          "observation_window_ref",
+          "detector_rule_ref",
+          "detector_config_ref"
+        ],
+        "title": "CandidateBottleneck"
+      },
+      "CandidateReviewStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "confirmed",
+          "rejected"
+        ],
+        "title": "CandidateReviewStatus"
+      },
+      "CapabilityAssessment": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/CapabilityStatus"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Explanation when partial or unavailable"
+          },
+          "runtime_implemented": {
+            "type": "boolean",
+            "title": "Runtime Implemented",
+            "description": "Whether the capability is implemented, independently of data eligibility"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "runtime_implemented"
+        ],
+        "title": "CapabilityAssessment"
+      },
+      "CapabilityReport": {
+        "properties": {
+          "process_discovery": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "kpi_calculation": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "bottleneck_detection": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "observed_inter_event_gaps": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "processing_durations": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "queue_waiting_durations": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "resource_analysis": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "bpmn_export": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          },
+          "simulation": {
+            "$ref": "#/components/schemas/CapabilityAssessment"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "process_discovery",
+          "kpi_calculation",
+          "bottleneck_detection",
+          "observed_inter_event_gaps",
+          "processing_durations",
+          "queue_waiting_durations",
+          "resource_analysis",
+          "bpmn_export",
+          "simulation"
+        ],
+        "title": "CapabilityReport"
+      },
+      "CapabilityStatus": {
+        "type": "string",
+        "enum": [
+          "available",
+          "partial",
+          "unavailable"
+        ],
+        "title": "CapabilityStatus"
+      },
+      "CoverageClass": {
+        "type": "string",
+        "enum": [
+          "full",
+          "partial",
+          "unknown"
+        ],
+        "title": "CoverageClass"
+      },
+      "DatasetLimitation": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Code",
+            "description": "Limitation identifier (e.g., LIM-NO-START-TIMESTAMP)"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Description"
+          },
+          "affected_capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Capabilities"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "description"
+        ],
+        "title": "DatasetLimitation"
+      },
+      "DatasetProfile": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Dataset Id"
+          },
+          "input_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$",
+            "title": "Input Sha256"
+          },
+          "format": {
+            "$ref": "#/components/schemas/EventLogFormat"
+          },
+          "profile_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Profile Ref"
+          },
+          "attributes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Attributes",
+            "description": "Minimized structural attributes; no raw event values"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "input_sha256",
+          "format",
+          "profile_ref",
+          "attributes"
+        ],
+        "title": "DatasetProfile"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "issue": {
+            "type": "string",
+            "title": "Issue"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "issue"
+        ],
+        "title": "ErrorDetail"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "items": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            },
+            "type": "array",
+            "title": "Details"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorResponse"
+      },
+      "EventLogFormat": {
+        "type": "string",
+        "enum": [
+          "csv",
+          "xes"
+        ],
+        "title": "EventLogFormat"
+      },
+      "EvidenceCategory": {
+        "type": "string",
+        "enum": [
+          "L1_delay_hotspot",
+          "L2_queue_candidate",
+          "L3_capacity_hypothesis"
+        ],
+        "title": "EvidenceCategory",
+        "description": "Evidence hierarchy defined in PR #16 (docs/DETECTOR_BASELINE.md)."
+      },
+      "EvidenceRecord": {
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Evidence Id"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Description"
+          },
+          "artifact_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Artifact Ref",
+            "description": "Authorized deterministic artifact reference; not raw event data"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "evidence_id",
+          "description",
+          "artifact_ref"
+        ],
+        "title": "EvidenceRecord"
+      },
+      "MappingConfirmation": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Dataset Id"
+          },
+          "input_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$",
+            "title": "Input Sha256"
+          },
+          "mapping_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Mapping Id"
+          },
+          "mapping_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Mapping Version"
+          },
+          "mapping_contract_version": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Mapping Contract Version"
+          },
+          "status": {
+            "type": "string",
+            "const": "confirmed",
+            "title": "Status"
+          },
+          "approval_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Approval Ref"
+          },
+          "actor_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Actor Ref"
+          },
+          "confirmed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Confirmed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "input_sha256",
+          "mapping_id",
+          "mapping_version",
+          "mapping_contract_version",
+          "status",
+          "approval_ref",
+          "actor_ref",
+          "confirmed_at"
+        ],
+        "title": "MappingConfirmation"
+      },
+      "MappingProposal": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Dataset Id"
+          },
+          "input_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$",
+            "title": "Input Sha256"
+          },
+          "mapping_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Mapping Id"
+          },
+          "mapping_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Mapping Version"
+          },
+          "mapping_contract_version": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Mapping Contract Version"
+          },
+          "status": {
+            "type": "string",
+            "const": "proposed",
+            "title": "Status"
+          },
+          "mapping_document_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Mapping Document Ref",
+            "description": "Stored TASK-03 mapping document without trusted approval"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "input_sha256",
+          "mapping_id",
+          "mapping_version",
+          "mapping_contract_version",
+          "status",
+          "mapping_document_ref"
+        ],
+        "title": "MappingProposal"
+      },
+      "MappingRevision": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Dataset Id"
+          },
+          "input_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$",
+            "title": "Input Sha256"
+          },
+          "mapping_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Mapping Id"
+          },
+          "mapping_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Mapping Version"
+          },
+          "mapping_contract_version": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Mapping Contract Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "input_sha256",
+          "mapping_id",
+          "mapping_version",
+          "mapping_contract_version"
+        ],
+        "title": "MappingRevision"
+      },
+      "MetricProvenance": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Method",
+            "description": "Calculation method identifier (e.g., maximum_mean_gap)"
+          },
+          "evidence_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvidenceCategory"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Evidence category, when applicable and established"
+          },
+          "input_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Input Fields",
+            "description": "Log attributes consumed"
+          },
+          "algorithm_version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Algorithm Version",
+            "description": "Version of the algorithm actually used"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Refs",
+            "description": "Traceable evidence identifiers"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "method"
+        ],
+        "title": "MetricProvenance"
+      },
+      "MetricStatus": {
+        "type": "string",
+        "enum": [
+          "measured",
+          "derived",
+          "estimated",
+          "unavailable"
+        ],
+        "title": "MetricStatus"
+      },
+      "ObservationCoverage": {
+        "properties": {
+          "eligible_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Eligible Count"
+          },
+          "total_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Count"
+          },
+          "ratio": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratio"
+          },
+          "coverage_class": {
+            "$ref": "#/components/schemas/CoverageClass"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "eligible_count",
+          "coverage_class"
+        ],
+        "title": "ObservationCoverage"
+      },
+      "ProcessKPI": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Metric",
+            "description": "Stable metric identifier"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Numeric value; null when unavailable"
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Unit",
+            "description": "Metric unit; temporal durations use seconds"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MetricStatus"
+          },
+          "time_semantics": {
+            "$ref": "#/components/schemas/TimeSemantics"
+          },
+          "sample_size": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Sample Size",
+            "description": "Observations count"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/MetricProvenance"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason",
+            "description": "Mandatory when status=unavailable"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "metric",
+          "unit",
+          "status",
+          "time_semantics",
+          "sample_size",
+          "provenance"
+        ],
+        "title": "ProcessKPI"
+      },
+      "PublicationState": {
+        "type": "string",
+        "enum": [
+          "internal_draft",
+          "approved_for_publication",
+          "published"
+        ],
+        "title": "PublicationState"
+      },
+      "PublishRequest": {
+        "properties": {
+          "result_revision": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Result Revision"
+          },
+          "authorized_consumers": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "P06",
+                "P20",
+                "P17",
+                "P21"
+              ]
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Authorized Consumers"
+          },
+          "publication_approval_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Publication Approval Ref",
+            "description": "Trusted human decision bound to path analysis ID, exact revision and selected consumers"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result_revision",
+          "authorized_consumers",
+          "publication_approval_ref"
+        ],
+        "title": "PublishRequest"
+      },
+      "PublishResponse": {
+        "properties": {
+          "publication_id": {
+            "type": "string",
+            "title": "Publication Id"
+          },
+          "analysis_id": {
+            "type": "string",
+            "title": "Analysis Id"
+          },
+          "result_revision": {
+            "type": "string",
+            "title": "Result Revision"
+          },
+          "publication_approval_ref": {
+            "type": "string",
+            "title": "Publication Approval Ref"
+          },
+          "status": {
+            "type": "string",
+            "const": "published",
+            "title": "Status"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At"
+          },
+          "consumers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Consumers"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "publication_id",
+          "analysis_id",
+          "result_revision",
+          "publication_approval_ref",
+          "status",
+          "published_at",
+          "consumers"
+        ],
+        "title": "PublishResponse"
+      },
+      "RankingGroup": {
+        "properties": {
+          "group_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Group Id"
+          },
+          "metric": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Metric"
+          },
+          "target_type": {
+            "$ref": "#/components/schemas/TargetType"
+          },
+          "analytical_view_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Analytical View Ref"
+          },
+          "observation_window_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Observation Window Ref"
+          },
+          "coverage_class": {
+            "$ref": "#/components/schemas/CoverageClass"
+          },
+          "statistic": {
+            "type": "string",
+            "const": "mean",
+            "title": "Statistic",
+            "default": "mean"
+          },
+          "unit": {
+            "type": "string",
+            "const": "seconds",
+            "title": "Unit",
+            "default": "seconds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "group_id",
+          "metric",
+          "target_type",
+          "analytical_view_ref",
+          "observation_window_ref",
+          "coverage_class"
+        ],
+        "title": "RankingGroup"
+      },
+      "RankingStatus": {
+        "type": "string",
+        "enum": [
+          "ranked",
+          "insufficient_support",
+          "no_positive_signal",
+          "unavailable"
+        ],
+        "title": "RankingStatus"
+      },
+      "SimulationScenarioResult": {
+        "properties": {
+          "scenario_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Scenario Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SimulationStatus"
+          },
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Assumptions"
+          },
+          "outputs": {
+            "items": {
+              "$ref": "#/components/schemas/ProcessKPI"
+            },
+            "type": "array",
+            "title": "Outputs"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "scenario_id",
+          "status"
+        ],
+        "title": "SimulationScenarioResult"
+      },
+      "SimulationStatus": {
+        "type": "string",
+        "enum": [
+          "not_run",
+          "completed",
+          "failed"
+        ],
+        "title": "SimulationStatus"
+      },
+      "SourceMetadata": {
+        "properties": {
+          "format": {
+            "$ref": "#/components/schemas/EventLogFormat"
+          },
+          "canonical_schema_version": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Canonical Schema Version"
+          },
+          "confirmed_mapping": {
+            "$ref": "#/components/schemas/MappingConfirmation"
+          },
+          "source_timestamp_semantics": {
+            "$ref": "#/components/schemas/SourceTimestampSemantics"
+          },
+          "case_notion": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Case Notion"
+          },
+          "normalized_timezone": {
+            "type": "string",
+            "const": "UTC",
+            "title": "Normalized Timezone"
+          },
+          "quality_report_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Quality Report Ref"
+          },
+          "source_log_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Log Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "format",
+          "canonical_schema_version",
+          "confirmed_mapping",
+          "source_timestamp_semantics",
+          "case_notion",
+          "normalized_timezone",
+          "quality_report_ref"
+        ],
+        "title": "SourceMetadata"
+      },
+      "SourceTimestampSemantics": {
+        "type": "string",
+        "enum": [
+          "completion",
+          "start",
+          "lifecycle",
+          "other_observed",
+          "unknown"
+        ],
+        "title": "SourceTimestampSemantics",
+        "description": "Meaning of timestamps in the source event log."
+      },
+      "SupportPolicy": {
+        "properties": {
+          "policy_version": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Policy Version"
+          },
+          "min_observations": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Min Observations",
+            "default": 3
+          },
+          "min_distinct_cases": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Min Distinct Cases",
+            "default": 3
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policy_version"
+        ],
+        "title": "SupportPolicy",
+        "description": "Explicit and versioned detector support configuration."
+      },
+      "TargetType": {
+        "type": "string",
+        "enum": [
+          "activity",
+          "transition",
+          "workstation"
+        ],
+        "title": "TargetType",
+        "description": "Target entity classification defined in PR #16."
+      },
+      "TimeSemantics": {
+        "type": "string",
+        "enum": [
+          "observed_inter_event_gap",
+          "processing_duration",
+          "queue_waiting_duration",
+          "throughput_duration",
+          "not_applicable",
+          "unknown"
+        ],
+        "title": "TimeSemantics",
+        "description": "Meaning of an analytical temporal metric."
+      }
+    }
+  }
+}
